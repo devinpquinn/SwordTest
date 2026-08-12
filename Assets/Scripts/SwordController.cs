@@ -29,13 +29,11 @@ public class SwordController : MonoBehaviour
     private Vector3 slashReleaseTargetPosition;
     private Quaternion heldRotationParentLocalRotation;
     private Quaternion heldSlashRotationParentLocalRotation;
-    private Quaternion slashWindupStartRotation;
-    private float slashWindupTimer;
 
     private void Awake()
     {
         mainCamera = Camera.main;
-        Cursor.visible = false;
+        //Cursor.visible = false;
 
         if (rotationParent != null)
         {
@@ -68,13 +66,13 @@ public class SwordController : MonoBehaviour
         vert = maxDistanceY > Mathf.Epsilon ? Mathf.Clamp(clampedY / maxDistanceY, -1f, 1f) : 0f;
 
         Vector3 targetPosition = transform.position + new Vector3(horiz * maxDistanceX, vert * maxDistanceY, 0f);
-        float liveRoll = GetLiveSlashRoll();
+        float mouseFacingRoll = GetMouseFacingSlashRoll(mouseWorldPosition, lockedSlashRoll);
 
         if (Input.GetMouseButtonDown(0))
         {
             isHoldingSlash = true;
             isExecutingSlash = false;
-            lockedSlashRoll = liveRoll;
+            lockedSlashRoll = mouseFacingRoll;
 
             if (rotationParent != null)
             {
@@ -83,8 +81,6 @@ public class SwordController : MonoBehaviour
 
             if (slashRotationParent != null)
             {
-                slashWindupStartRotation = slashRotationParent.localRotation;
-                slashWindupTimer = 0f;
                 heldSlashRotationParentLocalRotation =
                     initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, lockedSlashRoll);
             }
@@ -94,6 +90,7 @@ public class SwordController : MonoBehaviour
         {
             isHoldingSlash = false;
             isExecutingSlash = true;
+            lockedSlashRoll = GetCurrentSlashRoll();
             slashReleaseTargetPosition = targetPosition;
         }
 
@@ -119,7 +116,7 @@ public class SwordController : MonoBehaviour
             swordPoint.position = Vector3.Lerp(swordPoint.position, targetPosition, lerpSpeed * Time.deltaTime);
         }
 
-        float targetRoll = (isHoldingSlash || isExecutingSlash) ? lockedSlashRoll : 0f;
+        float targetRoll = isExecutingSlash ? lockedSlashRoll : 0f;
 
         if (rotationParent != null)
         {
@@ -149,18 +146,20 @@ public class SwordController : MonoBehaviour
         {
             if (isHoldingSlash)
             {
+                lockedSlashRoll = GetMouseFacingSlashRoll(mouseWorldPosition, lockedSlashRoll);
+                heldSlashRotationParentLocalRotation =
+                    initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, lockedSlashRoll);
+
                 if (slashWindupDuration <= Mathf.Epsilon)
                 {
                     slashRotationParent.localRotation = heldSlashRotationParentLocalRotation;
                 }
                 else
                 {
-                    slashWindupTimer += Time.deltaTime;
-                    float windupT = Mathf.Clamp01(slashWindupTimer / slashWindupDuration);
                     slashRotationParent.localRotation = Quaternion.Slerp(
-                        slashWindupStartRotation,
+                        slashRotationParent.localRotation,
                         heldSlashRotationParentLocalRotation,
-                        windupT);
+                        Time.deltaTime / slashWindupDuration);
                 }
             }
             else
@@ -174,14 +173,31 @@ public class SwordController : MonoBehaviour
         }
     }
 
-    private float GetLiveSlashRoll()
+    private float GetMouseFacingSlashRoll(Vector3 mouseWorldPosition, float fallbackRoll)
     {
-        Vector2 toCenter = new Vector2(-horiz, -vert);
-        if (toCenter.sqrMagnitude <= Mathf.Epsilon)
+        Vector2 toMouse = mouseWorldPosition - swordPoint.position;
+        if (toMouse.sqrMagnitude <= Mathf.Epsilon)
+        {
+            return fallbackRoll;
+        }
+
+        return Mathf.Atan2(toMouse.y, toMouse.x) * Mathf.Rad2Deg + slashRollOffset;
+    }
+
+    private float GetCurrentSlashRoll()
+    {
+        if (slashRotationParent == null)
         {
             return 0f;
         }
 
-        return Mathf.Atan2(toCenter.y, toCenter.x) * Mathf.Rad2Deg + slashRollOffset;
+        Quaternion relativeRotation = Quaternion.Inverse(initialSlashRotationParentLocalRotation) * slashRotationParent.localRotation;
+        float roll = relativeRotation.eulerAngles.z;
+        if (roll > 180f)
+        {
+            roll -= 360f;
+        }
+
+        return roll;
     }
 }
