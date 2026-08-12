@@ -188,10 +188,10 @@ MonoBehaviour:
   vert: 0.3438936
   rotationParent: {fileID: 154601369}
   rotationBlendSpeed: 50
-  rotationLeft: -15
-  rotationRight: 15
-  rotationUp: -15
-  rotationDown: 15
+  rotationLeft: -30
+  rotationRight: 30
+  rotationUp: -30
+  rotationDown: 30
   slashRotationParent: {fileID: 666300211}
   slashOffsetTarget: {fileID: 1055669354}
   slashRollOffset: 90
