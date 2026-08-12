@@ -2,18 +2,25 @@ using UnityEngine;
 
 public class SwordController : MonoBehaviour
 {
+    [Header("Movement")]
     [SerializeField] private Transform swordPoint;
     [SerializeField] private float lerpSpeed = 10f;
     [SerializeField] private float maxDistanceX = 2f;
     [SerializeField] private float maxDistanceY = 2f;
+
+    [Header("Input Preview")]
     [SerializeField, Range(-1f, 1f)] private float horiz;
     [SerializeField, Range(-1f, 1f)] private float vert;
+
+    [Header("Aim Rotation")]
     [SerializeField] private Transform rotationParent;
     [SerializeField] private float rotationBlendSpeed = 10f;
     [SerializeField] private float rotationLeft = -20f;
     [SerializeField] private float rotationRight = 20f;
     [SerializeField] private float rotationUp = -15f;
     [SerializeField] private float rotationDown = 15f;
+
+    [Header("Slash")]
     [SerializeField] private Transform slashRotationParent;
     [SerializeField] private float slashRollOffset = 0f;
     [SerializeField] private float slashWindupDuration = 0.08f;
