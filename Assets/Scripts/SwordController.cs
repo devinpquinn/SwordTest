@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 
 public class SwordController : MonoBehaviour
 {
@@ -22,20 +23,40 @@ public class SwordController : MonoBehaviour
 
     [Header("Slash")]
     [SerializeField] private Transform slashRotationParent;
+    [SerializeField] private Transform slashOffsetTarget;
     [SerializeField] private float slashRollOffset = 0f;
     [SerializeField] private float slashWindupDuration = 0.08f;
     [SerializeField] private float slashTravelLerpSpeed = 30f;
     [SerializeField] private float slashCompleteDistance = 0.05f;
+    [SerializeField] private float minimumSlashDistance = 1f;
+    [SerializeField] private float followThroughRecoveryDuration = 0.12f;
+    [SerializeField] private Vector3 windupPositionOffset;
+    [SerializeField] private Vector3 windupRotationOffset;
+    [SerializeField] private Vector3 followThroughPositionOffset;
+    [SerializeField] private Vector3 followThroughRotationOffset;
+    [SerializeField] private Ease slashOffsetEase = Ease.OutSine;
 
     private Camera mainCamera;
     private Quaternion initialRotationParentLocalRotation;
     private Quaternion initialSlashRotationParentLocalRotation;
+    private Vector3 initialSlashOffsetTargetLocalPosition;
+    private Quaternion initialSlashOffsetTargetLocalRotation;
     private bool isHoldingSlash;
     private bool isExecutingSlash;
+    private bool isRecoveringSlash;
     private float lockedSlashRoll;
     private Vector3 slashReleaseTargetPosition;
+    private Vector3 holdStartTargetPosition;
+    private float holdChargeWeight;
+    private float windupWeightAtRelease;
+    private float slashTravelTotalDistance;
+    private float slashRecoveryTimer;
     private Quaternion heldRotationParentLocalRotation;
-    private Quaternion heldSlashRotationParentLocalRotation;
+    private Tween slashOffsetPositionTween;
+    private Tween slashOffsetRotationTween;
+    private Vector3 lastSlashOffsetLocalPositionTarget;
+    private Quaternion lastSlashOffsetLocalRotationTarget;
+    private bool hasSlashOffsetTweenTarget;
 
     private void Awake()
     {
@@ -50,6 +71,12 @@ public class SwordController : MonoBehaviour
         if (slashRotationParent != null)
         {
             initialSlashRotationParentLocalRotation = slashRotationParent.localRotation;
+        }
+
+        if (slashOffsetTarget != null)
+        {
+            initialSlashOffsetTargetLocalPosition = slashOffsetTarget.localPosition;
+            initialSlashOffsetTargetLocalRotation = slashOffsetTarget.localRotation;
         }
     }
 
@@ -79,17 +106,14 @@ public class SwordController : MonoBehaviour
         {
             isHoldingSlash = true;
             isExecutingSlash = false;
+            isRecoveringSlash = false;
             lockedSlashRoll = mouseFacingRoll;
+            holdStartTargetPosition = targetPosition;
+            holdChargeWeight = 0f;
 
             if (rotationParent != null)
             {
                 heldRotationParentLocalRotation = rotationParent.localRotation;
-            }
-
-            if (slashRotationParent != null)
-            {
-                heldSlashRotationParentLocalRotation =
-                    initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, lockedSlashRoll);
             }
         }
 
@@ -99,11 +123,14 @@ public class SwordController : MonoBehaviour
             isExecutingSlash = true;
             lockedSlashRoll = GetCurrentSlashRoll();
             slashReleaseTargetPosition = targetPosition;
+            windupWeightAtRelease = holdChargeWeight;
+            slashTravelTotalDistance = Vector3.Distance(swordPoint.position, slashReleaseTargetPosition);
         }
 
         if (isHoldingSlash)
         {
-            // Freeze sword tip while drag is held to define a slash line.
+            float chargeDistance = Vector3.Distance(targetPosition, holdStartTargetPosition);
+            holdChargeWeight = GetChargeWeight(chargeDistance);
         }
         else if (isExecutingSlash)
         {
@@ -116,11 +143,22 @@ public class SwordController : MonoBehaviour
             {
                 swordPoint.position = slashReleaseTargetPosition;
                 isExecutingSlash = false;
+                isRecoveringSlash = true;
+                slashRecoveryTimer = 0f;
             }
         }
         else
         {
             swordPoint.position = Vector3.Lerp(swordPoint.position, targetPosition, lerpSpeed * Time.deltaTime);
+        }
+
+        if (isRecoveringSlash)
+        {
+            slashRecoveryTimer += Time.deltaTime;
+            if (slashRecoveryTimer >= followThroughRecoveryDuration)
+            {
+                isRecoveringSlash = false;
+            }
         }
 
         float targetRoll = isExecutingSlash ? lockedSlashRoll : 0f;
@@ -154,20 +192,11 @@ public class SwordController : MonoBehaviour
             if (isHoldingSlash)
             {
                 lockedSlashRoll = GetMouseFacingSlashRoll(mouseWorldPosition, lockedSlashRoll);
-                heldSlashRotationParentLocalRotation =
-                    initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, lockedSlashRoll);
-
-                if (slashWindupDuration <= Mathf.Epsilon)
-                {
-                    slashRotationParent.localRotation = heldSlashRotationParentLocalRotation;
-                }
-                else
-                {
-                    slashRotationParent.localRotation = Quaternion.Slerp(
-                        slashRotationParent.localRotation,
-                        heldSlashRotationParentLocalRotation,
-                        Time.deltaTime / slashWindupDuration);
-                }
+                Quaternion holdSlashRotation = initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, lockedSlashRoll);
+                slashRotationParent.localRotation = Quaternion.Slerp(
+                    slashRotationParent.localRotation,
+                    holdSlashRotation,
+                    GetDurationBlendFactor(slashWindupDuration));
             }
             else
             {
@@ -178,6 +207,27 @@ public class SwordController : MonoBehaviour
                     rotationBlendSpeed * Time.deltaTime);
             }
         }
+
+        if (slashOffsetTarget != null)
+        {
+            float slashProgress = GetSlashProgress();
+            float windupWeight = GetWindupWeight(slashProgress);
+            float followThroughWeight = GetFollowThroughWeight(slashProgress);
+
+            Vector3 offsetPosition = (windupPositionOffset * windupWeight) + (followThroughPositionOffset * followThroughWeight);
+            Vector3 offsetEuler = (windupRotationOffset * windupWeight) + (followThroughRotationOffset * followThroughWeight);
+            float offsetTweenDuration = isRecoveringSlash
+                ? followThroughRecoveryDuration
+                : slashWindupDuration;
+            TweenSlashOffsetTarget(offsetPosition, offsetEuler, offsetTweenDuration);
+        }
+    }
+
+    private void OnDisable()
+    {
+        slashOffsetPositionTween?.Kill();
+        slashOffsetRotationTween?.Kill();
+        hasSlashOffsetTweenTarget = false;
     }
 
     private float GetMouseFacingSlashRoll(Vector3 mouseWorldPosition, float fallbackRoll)
@@ -206,5 +256,126 @@ public class SwordController : MonoBehaviour
         }
 
         return roll;
+    }
+
+    private float GetChargeWeight(float chargeDistance)
+    {
+        if (minimumSlashDistance <= Mathf.Epsilon)
+        {
+            return 1f;
+        }
+
+        float normalizedCharge = Mathf.Clamp01(chargeDistance / minimumSlashDistance);
+        return Mathf.SmoothStep(0f, 1f, normalizedCharge);
+    }
+
+    private float GetSlashProgress()
+    {
+        if (!isExecutingSlash)
+        {
+            return 0f;
+        }
+
+        if (slashTravelTotalDistance <= Mathf.Epsilon)
+        {
+            return 1f;
+        }
+
+        float remainingDistance = Vector3.Distance(swordPoint.position, slashReleaseTargetPosition);
+        return Mathf.Clamp01(1f - (remainingDistance / slashTravelTotalDistance));
+    }
+
+    private float GetWindupWeight(float slashProgress)
+    {
+        if (isHoldingSlash)
+        {
+            return holdChargeWeight;
+        }
+
+        if (isExecutingSlash)
+        {
+            return windupWeightAtRelease * (1f - slashProgress);
+        }
+
+        return 0f;
+    }
+
+    private float GetFollowThroughWeight(float slashProgress)
+    {
+        if (isExecutingSlash)
+        {
+            return slashProgress;
+        }
+
+        if (isRecoveringSlash)
+        {
+            if (followThroughRecoveryDuration <= Mathf.Epsilon)
+            {
+                return 0f;
+            }
+
+            float recoveryT = Mathf.Clamp01(slashRecoveryTimer / followThroughRecoveryDuration);
+            return 1f - recoveryT;
+        }
+
+        return 0f;
+    }
+
+    private float GetDurationBlendFactor(float duration)
+    {
+        if (duration <= Mathf.Epsilon)
+        {
+            return 1f;
+        }
+
+        return Mathf.Clamp01(Time.deltaTime / duration);
+    }
+
+    private void TweenSlashOffsetTarget(Vector3 offsetPosition, Vector3 offsetEuler, float duration)
+    {
+        if (slashOffsetTarget == null)
+        {
+            return;
+        }
+
+        Vector3 targetLocalPosition = initialSlashOffsetTargetLocalPosition + offsetPosition;
+        Quaternion targetLocalRotation = initialSlashOffsetTargetLocalRotation * Quaternion.Euler(offsetEuler);
+
+        if (duration <= Mathf.Epsilon)
+        {
+            slashOffsetPositionTween?.Kill();
+            slashOffsetRotationTween?.Kill();
+            slashOffsetTarget.localPosition = targetLocalPosition;
+            slashOffsetTarget.localRotation = targetLocalRotation;
+            lastSlashOffsetLocalPositionTarget = targetLocalPosition;
+            lastSlashOffsetLocalRotationTarget = targetLocalRotation;
+            hasSlashOffsetTweenTarget = true;
+            return;
+        }
+
+        bool positionTargetChanged = !hasSlashOffsetTweenTarget ||
+            Vector3.SqrMagnitude(lastSlashOffsetLocalPositionTarget - targetLocalPosition) > 0.000001f;
+        bool rotationTargetChanged = !hasSlashOffsetTweenTarget ||
+            Quaternion.Angle(lastSlashOffsetLocalRotationTarget, targetLocalRotation) > 0.01f;
+
+        if (positionTargetChanged)
+        {
+            slashOffsetPositionTween?.Kill();
+            slashOffsetPositionTween = slashOffsetTarget
+                .DOLocalMove(targetLocalPosition, duration)
+                .SetEase(slashOffsetEase);
+            lastSlashOffsetLocalPositionTarget = targetLocalPosition;
+        }
+
+        if (rotationTargetChanged)
+        {
+            slashOffsetRotationTween?.Kill();
+            slashOffsetRotationTween = slashOffsetTarget
+                .DOLocalRotateQuaternion(targetLocalRotation, duration)
+                .SetEase(slashOffsetEase);
+            lastSlashOffsetLocalRotationTarget = targetLocalRotation;
+        }
+
+        hasSlashOffsetTweenTarget = true;
     }
 }
