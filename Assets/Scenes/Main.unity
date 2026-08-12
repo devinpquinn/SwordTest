@@ -195,7 +195,7 @@ MonoBehaviour:
   slashRotationParent: {fileID: 666300211}
   slashOffsetTarget: {fileID: 1055669354}
   slashRollOffset: 90
-  slashWindupDuration: 1
+  slashWindupDuration: 0.5
   slashTravelLerpSpeed: 30
   slashCompleteDistance: 0.05
   minimumSlashDistance: 5
