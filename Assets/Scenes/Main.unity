@@ -198,9 +198,10 @@ MonoBehaviour:
   slashRotationToMouseLerpSpeed: 60
   slashWindupDuration: 0.5
   slashTravelDuration: 0.12
-  minimumSlashDistance: 5
+  fullyChargedSlashDistance: 5
   followThroughRecoveryDuration: 0.2
   windupRotationX: -30
+  apexRotationX: 0
   followThroughRotationX: 30
   slashOffsetEase: 27
 --- !u!4 &283610446

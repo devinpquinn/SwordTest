@@ -28,7 +28,7 @@ public class SwordController : MonoBehaviour
     [SerializeField] private float slashRotationToMouseLerpSpeed = 12f;
     [SerializeField] private float slashWindupDuration = 0.08f;
     [SerializeField] private float slashTravelDuration = 0.12f;
-    [SerializeField] private float minimumSlashDistance = 1f;
+    [SerializeField] private float fullyChargedSlashDistance = 1f;
     [SerializeField] private float followThroughRecoveryDuration = 0.12f;
     [SerializeField] private float windupRotationX;
     [SerializeField] private float apexRotationX;
@@ -286,12 +286,12 @@ public class SwordController : MonoBehaviour
 
     private float GetChargeWeight(float chargeDistance)
     {
-        if (minimumSlashDistance <= Mathf.Epsilon)
+        if (fullyChargedSlashDistance <= Mathf.Epsilon)
         {
             return 1f;
         }
 
-        float normalizedCharge = Mathf.Clamp01(chargeDistance / minimumSlashDistance);
+        float normalizedCharge = Mathf.Clamp01(chargeDistance / fullyChargedSlashDistance);
         return Mathf.SmoothStep(0f, 1f, normalizedCharge);
     }
 
