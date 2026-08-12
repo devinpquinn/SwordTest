@@ -14,9 +14,12 @@ public class SwordController : MonoBehaviour
     [SerializeField] private float rotationRight = 20f;
     [SerializeField] private float rotationUp = -15f;
     [SerializeField] private float rotationDown = 15f;
+    [SerializeField] private Transform slashRotationParent;
+    [SerializeField] private float slashRollOffset = 0f;
 
     private Camera mainCamera;
     private Quaternion initialRotationParentLocalRotation;
+    private Quaternion initialSlashRotationParentLocalRotation;
 
     private void Awake()
     {
@@ -26,6 +29,11 @@ public class SwordController : MonoBehaviour
         if (rotationParent != null)
         {
             initialRotationParentLocalRotation = rotationParent.localRotation;
+        }
+
+        if (slashRotationParent != null)
+        {
+            initialSlashRotationParentLocalRotation = slashRotationParent.localRotation;
         }
     }
 
@@ -51,6 +59,16 @@ public class SwordController : MonoBehaviour
         Vector3 targetPosition = transform.position + new Vector3(horiz * maxDistanceX, vert * maxDistanceY, 0f);
         swordPoint.position = Vector3.Lerp(swordPoint.position, targetPosition, lerpSpeed * Time.deltaTime);
 
+        float targetRoll = 0f;
+        if (Input.GetMouseButton(0))
+        {
+            Vector2 toCenter = new Vector2(-horiz, -vert);
+            if (toCenter.sqrMagnitude > Mathf.Epsilon)
+            {
+                targetRoll = Mathf.Atan2(toCenter.y, toCenter.x) * Mathf.Rad2Deg + slashRollOffset;
+            }
+        }
+
         if (rotationParent != null)
         {
             float targetYaw = horiz < 0f
@@ -65,6 +83,15 @@ public class SwordController : MonoBehaviour
             rotationParent.localRotation = Quaternion.Lerp(
                 rotationParent.localRotation,
                 targetRotation,
+                rotationBlendSpeed * Time.deltaTime);
+        }
+
+        if (slashRotationParent != null)
+        {
+            Quaternion targetSlashRotation = initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, targetRoll);
+            slashRotationParent.localRotation = Quaternion.Lerp(
+                slashRotationParent.localRotation,
+                targetSlashRotation,
                 rotationBlendSpeed * Time.deltaTime);
         }
     }
