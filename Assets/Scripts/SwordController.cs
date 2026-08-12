@@ -27,8 +27,7 @@ public class SwordController : MonoBehaviour
     [SerializeField] private float slashRollOffset = 0f;
     [SerializeField] private float slashRotationToMouseLerpSpeed = 12f;
     [SerializeField] private float slashWindupDuration = 0.08f;
-    [SerializeField] private float slashTravelLerpSpeed = 30f;
-    [SerializeField] private float slashCompleteDistance = 0.05f;
+    [SerializeField] private float slashTravelDuration = 0.12f;
     [SerializeField] private float minimumSlashDistance = 1f;
     [SerializeField] private float followThroughRecoveryDuration = 0.12f;
     [SerializeField] private Vector3 windupRotationOffset;
@@ -47,7 +46,9 @@ public class SwordController : MonoBehaviour
     private Vector3 holdStartTargetPosition;
     private float holdChargeWeight;
     private float windupWeightAtRelease;
-    private float slashTravelTotalDistance;
+    private float slashTravelTimer;
+    private float slashTravelProgress;
+    private Vector3 slashTravelStartPosition;
     private float slashRecoveryTimer;
     private Quaternion heldRotationParentLocalRotation;
     private Tween slashOffsetRotationTween;
@@ -119,7 +120,9 @@ public class SwordController : MonoBehaviour
             lockedSlashRoll = GetCurrentSlashRoll();
             slashReleaseTargetPosition = targetPosition;
             windupWeightAtRelease = holdChargeWeight;
-            slashTravelTotalDistance = Vector3.Distance(swordPoint.position, slashReleaseTargetPosition);
+            slashTravelStartPosition = swordPoint.position;
+            slashTravelTimer = 0f;
+            slashTravelProgress = 0f;
         }
 
         if (isHoldingSlash)
@@ -129,17 +132,27 @@ public class SwordController : MonoBehaviour
         }
         else if (isExecutingSlash)
         {
-            swordPoint.position = Vector3.Lerp(
-                swordPoint.position,
-                slashReleaseTargetPosition,
-                slashTravelLerpSpeed * Time.deltaTime);
-
-            if (Vector3.Distance(swordPoint.position, slashReleaseTargetPosition) <= slashCompleteDistance)
+            if (slashTravelDuration <= Mathf.Epsilon)
             {
                 swordPoint.position = slashReleaseTargetPosition;
+                slashTravelProgress = 1f;
                 isExecutingSlash = false;
                 isRecoveringSlash = true;
                 slashRecoveryTimer = 0f;
+            }
+            else
+            {
+                slashTravelTimer += Time.deltaTime;
+                slashTravelProgress = Mathf.Clamp01(slashTravelTimer / slashTravelDuration);
+                swordPoint.position = Vector3.Lerp(slashTravelStartPosition, slashReleaseTargetPosition, slashTravelProgress);
+
+                if (slashTravelProgress >= 1f)
+                {
+                    swordPoint.position = slashReleaseTargetPosition;
+                    isExecutingSlash = false;
+                    isRecoveringSlash = true;
+                    slashRecoveryTimer = 0f;
+                }
             }
         }
         else
@@ -269,13 +282,7 @@ public class SwordController : MonoBehaviour
             return 0f;
         }
 
-        if (slashTravelTotalDistance <= Mathf.Epsilon)
-        {
-            return 1f;
-        }
-
-        float remainingDistance = Vector3.Distance(swordPoint.position, slashReleaseTargetPosition);
-        return Mathf.Clamp01(1f - (remainingDistance / slashTravelTotalDistance));
+        return slashTravelProgress;
     }
 
     private float GetWindupWeight(float slashProgress)
