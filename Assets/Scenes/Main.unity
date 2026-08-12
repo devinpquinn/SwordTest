@@ -148,7 +148,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3716012699893945814}
+  - {fileID: 1228166051}
   m_Father: {fileID: 595990383}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &283610444
@@ -184,6 +184,14 @@ MonoBehaviour:
   lerpSpeed: 50
   maxDistanceX: 5
   maxDistanceY: 5
+  horiz: 0
+  vert: 0
+  rotationParent: {fileID: 154601369}
+  rotationBlendSpeed: 10
+  rotationLeft: -20
+  rotationRight: 20
+  rotationUp: -15
+  rotationDown: 15
 --- !u!4 &283610446
 Transform:
   m_ObjectHideFlags: 0
@@ -488,7 +496,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 595990380}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -603,6 +611,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1228166050
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1228166051}
+  m_Layer: 0
+  m_Name: SwordDefaultPosture
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1228166051
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228166050}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3716012699893945814}
+  m_Father: {fileID: 154601369}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &305741516029811315
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -669,11 +709,11 @@ Transform:
   m_GameObject: {fileID: 4096654362908331884}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: -0.5, z: -0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -5.3333335}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 154601369}
+  m_Father: {fileID: 1228166051}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: -90}
 --- !u!1 &4096654362908331884
 GameObject:
