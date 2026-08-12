@@ -12,6 +12,7 @@ public class SwordController : MonoBehaviour
     private void Awake()
     {
         mainCamera = Camera.main;
+        Cursor.visible = false;
     }
 
     private void Update()
