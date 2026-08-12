@@ -31,6 +31,7 @@ public class SwordController : MonoBehaviour
     [SerializeField] private float minimumSlashDistance = 1f;
     [SerializeField] private float followThroughRecoveryDuration = 0.12f;
     [SerializeField] private float windupRotationX;
+    [SerializeField] private float apexRotationX;
     [SerializeField] private float followThroughRotationX;
     [SerializeField] private Ease slashOffsetEase = Ease.OutSine;
 
@@ -241,10 +242,7 @@ public class SwordController : MonoBehaviour
         if (slashOffsetTarget != null)
         {
             float slashProgress = GetSlashProgress();
-            float windupWeight = GetWindupWeight(slashProgress);
-            float followThroughWeight = GetFollowThroughWeight(slashProgress);
-
-            float offsetRotationX = (windupRotationX * windupWeight) + (followThroughRotationX * followThroughWeight);
+            float offsetRotationX = GetSlashOffsetRotationX(slashProgress);
             float offsetTweenDuration = isRecoveringSlash
                 ? followThroughRecoveryDuration
                 : slashWindupDuration;
@@ -307,26 +305,25 @@ public class SwordController : MonoBehaviour
         return slashTravelProgress;
     }
 
-    private float GetWindupWeight(float slashProgress)
+    private float GetSlashOffsetRotationX(float slashProgress)
     {
         if (isHoldingSlash)
         {
-            return holdChargeWeight;
+            return windupRotationX * holdChargeWeight;
         }
 
         if (isExecutingSlash)
         {
-            return windupWeightAtRelease * (1f - slashProgress);
-        }
+            float windupEndRotation = windupRotationX * windupWeightAtRelease;
 
-        return 0f;
-    }
+            if (slashProgress <= 0.5f)
+            {
+                float toApexT = Mathf.Clamp01(slashProgress / 0.5f);
+                return Mathf.Lerp(windupEndRotation, apexRotationX, toApexT);
+            }
 
-    private float GetFollowThroughWeight(float slashProgress)
-    {
-        if (isExecutingSlash)
-        {
-            return slashProgress;
+            float toFollowThroughT = Mathf.Clamp01((slashProgress - 0.5f) / 0.5f);
+            return Mathf.Lerp(apexRotationX, followThroughRotationX, toFollowThroughT);
         }
 
         if (isRecoveringSlash)
@@ -337,7 +334,7 @@ public class SwordController : MonoBehaviour
             }
 
             float recoveryT = Mathf.Clamp01(slashRecoveryTimer / followThroughRecoveryDuration);
-            return 1f - recoveryT;
+            return Mathf.Lerp(followThroughRotationX, 0f, recoveryT);
         }
 
         return 0f;
