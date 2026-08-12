@@ -181,17 +181,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordController
   swordPoint: {fileID: 595990383}
-  lerpSpeed: 50
+  lerpSpeed: 30
   maxDistanceX: 5
   maxDistanceY: 5
   horiz: 1
   vert: 0.3438936
   rotationParent: {fileID: 154601369}
-  rotationBlendSpeed: 20
-  rotationLeft: -45
-  rotationRight: 45
-  rotationUp: -45
-  rotationDown: 45
+  rotationBlendSpeed: 50
+  rotationLeft: -15
+  rotationRight: 15
+  rotationUp: -15
+  rotationDown: 15
 --- !u!4 &283610446
 Transform:
   m_ObjectHideFlags: 0
@@ -268,8 +268,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 6
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -496,7 +496,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 595990380}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -635,14 +635,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1228166050}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.13216425, y: -0.03751701, z: 0.03751701, w: 0.98980683}
+  m_LocalRotation: {x: -0.13052624, y: 0, z: 0, w: 0.9914449}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3716012699893945814}
   m_Father: {fileID: 154601369}
-  m_LocalEulerAnglesHint: {x: -15, y: -5, z: 5}
+  m_LocalEulerAnglesHint: {x: -15, y: 0, z: 0}
 --- !u!33 &305741516029811315
 MeshFilter:
   m_ObjectHideFlags: 0
