@@ -184,14 +184,14 @@ MonoBehaviour:
   lerpSpeed: 50
   maxDistanceX: 5
   maxDistanceY: 5
-  horiz: 0
-  vert: 0
+  horiz: 1
+  vert: 0.3438936
   rotationParent: {fileID: 154601369}
   rotationBlendSpeed: 10
-  rotationLeft: -20
-  rotationRight: 20
-  rotationUp: -15
-  rotationDown: 15
+  rotationLeft: -45
+  rotationRight: 45
+  rotationUp: -45
+  rotationDown: 45
 --- !u!4 &283610446
 Transform:
   m_ObjectHideFlags: 0
