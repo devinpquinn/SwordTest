@@ -51,6 +51,7 @@ public class SwordController : MonoBehaviour
     private Vector3 slashTravelStartPosition;
     private float slashRecoveryTimer;
     private Quaternion heldRotationParentLocalRotation;
+    private Quaternion slashRecoveryStartRotation;
     private Tween slashOffsetRotationTween;
     private Quaternion lastSlashOffsetLocalRotationTarget;
     private bool hasSlashOffsetTweenTarget;
@@ -139,6 +140,10 @@ public class SwordController : MonoBehaviour
                 isExecutingSlash = false;
                 isRecoveringSlash = true;
                 slashRecoveryTimer = 0f;
+                if (slashRotationParent != null)
+                {
+                    slashRecoveryStartRotation = slashRotationParent.localRotation;
+                }
             }
             else
             {
@@ -152,6 +157,10 @@ public class SwordController : MonoBehaviour
                     isExecutingSlash = false;
                     isRecoveringSlash = true;
                     slashRecoveryTimer = 0f;
+                    if (slashRotationParent != null)
+                    {
+                        slashRecoveryStartRotation = slashRotationParent.localRotation;
+                    }
                 }
             }
         }
@@ -209,10 +218,23 @@ public class SwordController : MonoBehaviour
             else
             {
                 Quaternion targetSlashRotation = initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, targetRoll);
-                slashRotationParent.localRotation = Quaternion.Lerp(
-                    slashRotationParent.localRotation,
-                    targetSlashRotation,
-                    rotationBlendSpeed * Time.deltaTime);
+                if (isRecoveringSlash)
+                {
+                    float recoveryT = followThroughRecoveryDuration <= Mathf.Epsilon
+                        ? 1f
+                        : Mathf.Clamp01(slashRecoveryTimer / followThroughRecoveryDuration);
+                    slashRotationParent.localRotation = Quaternion.Slerp(
+                        slashRecoveryStartRotation,
+                        targetSlashRotation,
+                        recoveryT);
+                }
+                else
+                {
+                    slashRotationParent.localRotation = Quaternion.Lerp(
+                        slashRotationParent.localRotation,
+                        targetSlashRotation,
+                        Mathf.Clamp01(rotationBlendSpeed * Time.deltaTime));
+                }
             }
         }
 
