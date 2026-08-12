@@ -16,6 +16,7 @@ public class SwordController : MonoBehaviour
     [SerializeField] private float rotationDown = 15f;
     [SerializeField] private Transform slashRotationParent;
     [SerializeField] private float slashRollOffset = 0f;
+    [SerializeField] private float slashWindupDuration = 0.08f;
     [SerializeField] private float slashTravelLerpSpeed = 30f;
     [SerializeField] private float slashCompleteDistance = 0.05f;
 
@@ -28,6 +29,8 @@ public class SwordController : MonoBehaviour
     private Vector3 slashReleaseTargetPosition;
     private Quaternion heldRotationParentLocalRotation;
     private Quaternion heldSlashRotationParentLocalRotation;
+    private Quaternion slashWindupStartRotation;
+    private float slashWindupTimer;
 
     private void Awake()
     {
@@ -80,9 +83,10 @@ public class SwordController : MonoBehaviour
 
             if (slashRotationParent != null)
             {
+                slashWindupStartRotation = slashRotationParent.localRotation;
+                slashWindupTimer = 0f;
                 heldSlashRotationParentLocalRotation =
                     initialSlashRotationParentLocalRotation * Quaternion.Euler(0f, 0f, lockedSlashRoll);
-                slashRotationParent.localRotation = heldSlashRotationParentLocalRotation;
             }
         }
 
@@ -145,7 +149,19 @@ public class SwordController : MonoBehaviour
         {
             if (isHoldingSlash)
             {
-                slashRotationParent.localRotation = heldSlashRotationParentLocalRotation;
+                if (slashWindupDuration <= Mathf.Epsilon)
+                {
+                    slashRotationParent.localRotation = heldSlashRotationParentLocalRotation;
+                }
+                else
+                {
+                    slashWindupTimer += Time.deltaTime;
+                    float windupT = Mathf.Clamp01(slashWindupTimer / slashWindupDuration);
+                    slashRotationParent.localRotation = Quaternion.Slerp(
+                        slashWindupStartRotation,
+                        heldSlashRotationParentLocalRotation,
+                        windupT);
+                }
             }
             else
             {
