@@ -25,6 +25,7 @@ public class WeaponController : MonoBehaviour
         if (weaponTarget != null && weaponObject != null)
         {
             weaponObject.position = weaponTarget.position;
+            weaponObject.gameObject.SetActive(false);
         }
     }
 
@@ -56,6 +57,7 @@ public class WeaponController : MonoBehaviour
             slashTween = null;
             isChargingSlash = true;
             isExecutingSlash = false;
+            weaponObject.gameObject.SetActive(true);
         }
 
         if (Input.GetMouseButtonUp(0) && isChargingSlash)
@@ -67,6 +69,7 @@ public class WeaponController : MonoBehaviour
         if (!isChargingSlash && !isExecutingSlash)
         {
             weaponObject.position = weaponTarget.position;
+            weaponObject.gameObject.SetActive(false);
         }
     }
 
@@ -86,6 +89,7 @@ public class WeaponController : MonoBehaviour
             {
                 isExecutingSlash = false;
                 weaponObject.position = weaponTarget.position;
+                weaponObject.gameObject.SetActive(false);
                 slashTween = null;
             });
     }
@@ -96,5 +100,9 @@ public class WeaponController : MonoBehaviour
         slashTween = null;
         isChargingSlash = false;
         isExecutingSlash = false;
+        if (weaponObject != null)
+        {
+            weaponObject.gameObject.SetActive(false);
+        }
     }
 }
