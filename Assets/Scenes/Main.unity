@@ -195,14 +195,13 @@ MonoBehaviour:
   slashRotationParent: {fileID: 666300211}
   slashOffsetTarget: {fileID: 1055669354}
   slashRollOffset: 90
+  slashRotationToMouseLerpSpeed: 60
   slashWindupDuration: 0.5
   slashTravelLerpSpeed: 30
   slashCompleteDistance: 0.05
   minimumSlashDistance: 5
   followThroughRecoveryDuration: 0.2
-  windupPositionOffset: {x: 0, y: 0, z: -2}
   windupRotationOffset: {x: -60, y: 0, z: 0}
-  followThroughPositionOffset: {x: 0, y: 0, z: 1}
   followThroughRotationOffset: {x: 30, y: 0, z: 0}
   slashOffsetEase: 3
 --- !u!4 &283610446

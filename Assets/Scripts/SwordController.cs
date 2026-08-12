@@ -25,21 +25,19 @@ public class SwordController : MonoBehaviour
     [SerializeField] private Transform slashRotationParent;
     [SerializeField] private Transform slashOffsetTarget;
     [SerializeField] private float slashRollOffset = 0f;
+    [SerializeField] private float slashRotationToMouseLerpSpeed = 12f;
     [SerializeField] private float slashWindupDuration = 0.08f;
     [SerializeField] private float slashTravelLerpSpeed = 30f;
     [SerializeField] private float slashCompleteDistance = 0.05f;
     [SerializeField] private float minimumSlashDistance = 1f;
     [SerializeField] private float followThroughRecoveryDuration = 0.12f;
-    [SerializeField] private Vector3 windupPositionOffset;
     [SerializeField] private Vector3 windupRotationOffset;
-    [SerializeField] private Vector3 followThroughPositionOffset;
     [SerializeField] private Vector3 followThroughRotationOffset;
     [SerializeField] private Ease slashOffsetEase = Ease.OutSine;
 
     private Camera mainCamera;
     private Quaternion initialRotationParentLocalRotation;
     private Quaternion initialSlashRotationParentLocalRotation;
-    private Vector3 initialSlashOffsetTargetLocalPosition;
     private Quaternion initialSlashOffsetTargetLocalRotation;
     private bool isHoldingSlash;
     private bool isExecutingSlash;
@@ -52,9 +50,7 @@ public class SwordController : MonoBehaviour
     private float slashTravelTotalDistance;
     private float slashRecoveryTimer;
     private Quaternion heldRotationParentLocalRotation;
-    private Tween slashOffsetPositionTween;
     private Tween slashOffsetRotationTween;
-    private Vector3 lastSlashOffsetLocalPositionTarget;
     private Quaternion lastSlashOffsetLocalRotationTarget;
     private bool hasSlashOffsetTweenTarget;
 
@@ -75,7 +71,6 @@ public class SwordController : MonoBehaviour
 
         if (slashOffsetTarget != null)
         {
-            initialSlashOffsetTargetLocalPosition = slashOffsetTarget.localPosition;
             initialSlashOffsetTargetLocalRotation = slashOffsetTarget.localRotation;
         }
     }
@@ -196,7 +191,7 @@ public class SwordController : MonoBehaviour
                 slashRotationParent.localRotation = Quaternion.Slerp(
                     slashRotationParent.localRotation,
                     holdSlashRotation,
-                    GetDurationBlendFactor(slashWindupDuration));
+                    Mathf.Clamp01(slashRotationToMouseLerpSpeed * Time.deltaTime));
             }
             else
             {
@@ -214,18 +209,16 @@ public class SwordController : MonoBehaviour
             float windupWeight = GetWindupWeight(slashProgress);
             float followThroughWeight = GetFollowThroughWeight(slashProgress);
 
-            Vector3 offsetPosition = (windupPositionOffset * windupWeight) + (followThroughPositionOffset * followThroughWeight);
             Vector3 offsetEuler = (windupRotationOffset * windupWeight) + (followThroughRotationOffset * followThroughWeight);
             float offsetTweenDuration = isRecoveringSlash
                 ? followThroughRecoveryDuration
                 : slashWindupDuration;
-            TweenSlashOffsetTarget(offsetPosition, offsetEuler, offsetTweenDuration);
+            TweenSlashOffsetTarget(offsetEuler, offsetTweenDuration);
         }
     }
 
     private void OnDisable()
     {
-        slashOffsetPositionTween?.Kill();
         slashOffsetRotationTween?.Kill();
         hasSlashOffsetTweenTarget = false;
     }
@@ -331,41 +324,26 @@ public class SwordController : MonoBehaviour
         return Mathf.Clamp01(Time.deltaTime / duration);
     }
 
-    private void TweenSlashOffsetTarget(Vector3 offsetPosition, Vector3 offsetEuler, float duration)
+    private void TweenSlashOffsetTarget(Vector3 offsetEuler, float duration)
     {
         if (slashOffsetTarget == null)
         {
             return;
         }
 
-        Vector3 targetLocalPosition = initialSlashOffsetTargetLocalPosition + offsetPosition;
         Quaternion targetLocalRotation = initialSlashOffsetTargetLocalRotation * Quaternion.Euler(offsetEuler);
 
         if (duration <= Mathf.Epsilon)
         {
-            slashOffsetPositionTween?.Kill();
             slashOffsetRotationTween?.Kill();
-            slashOffsetTarget.localPosition = targetLocalPosition;
             slashOffsetTarget.localRotation = targetLocalRotation;
-            lastSlashOffsetLocalPositionTarget = targetLocalPosition;
             lastSlashOffsetLocalRotationTarget = targetLocalRotation;
             hasSlashOffsetTweenTarget = true;
             return;
         }
 
-        bool positionTargetChanged = !hasSlashOffsetTweenTarget ||
-            Vector3.SqrMagnitude(lastSlashOffsetLocalPositionTarget - targetLocalPosition) > 0.000001f;
         bool rotationTargetChanged = !hasSlashOffsetTweenTarget ||
             Quaternion.Angle(lastSlashOffsetLocalRotationTarget, targetLocalRotation) > 0.01f;
-
-        if (positionTargetChanged)
-        {
-            slashOffsetPositionTween?.Kill();
-            slashOffsetPositionTween = slashOffsetTarget
-                .DOLocalMove(targetLocalPosition, duration)
-                .SetEase(slashOffsetEase);
-            lastSlashOffsetLocalPositionTarget = targetLocalPosition;
-        }
 
         if (rotationTargetChanged)
         {
