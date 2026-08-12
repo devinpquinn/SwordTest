@@ -30,8 +30,8 @@ public class SwordController : MonoBehaviour
     [SerializeField] private float slashTravelDuration = 0.12f;
     [SerializeField] private float minimumSlashDistance = 1f;
     [SerializeField] private float followThroughRecoveryDuration = 0.12f;
-    [SerializeField] private Vector3 windupRotationOffset;
-    [SerializeField] private Vector3 followThroughRotationOffset;
+    [SerializeField] private float windupRotationX;
+    [SerializeField] private float followThroughRotationX;
     [SerializeField] private Ease slashOffsetEase = Ease.OutSine;
 
     private Camera mainCamera;
@@ -222,11 +222,11 @@ public class SwordController : MonoBehaviour
             float windupWeight = GetWindupWeight(slashProgress);
             float followThroughWeight = GetFollowThroughWeight(slashProgress);
 
-            Vector3 offsetEuler = (windupRotationOffset * windupWeight) + (followThroughRotationOffset * followThroughWeight);
+            float offsetRotationX = (windupRotationX * windupWeight) + (followThroughRotationX * followThroughWeight);
             float offsetTweenDuration = isRecoveringSlash
                 ? followThroughRecoveryDuration
                 : slashWindupDuration;
-            TweenSlashOffsetTarget(offsetEuler, offsetTweenDuration);
+            TweenSlashOffsetTarget(offsetRotationX, offsetTweenDuration);
         }
     }
 
@@ -331,14 +331,14 @@ public class SwordController : MonoBehaviour
         return Mathf.Clamp01(Time.deltaTime / duration);
     }
 
-    private void TweenSlashOffsetTarget(Vector3 offsetEuler, float duration)
+    private void TweenSlashOffsetTarget(float offsetRotationX, float duration)
     {
         if (slashOffsetTarget == null)
         {
             return;
         }
 
-        Quaternion targetLocalRotation = initialSlashOffsetTargetLocalRotation * Quaternion.Euler(offsetEuler);
+        Quaternion targetLocalRotation = initialSlashOffsetTargetLocalRotation * Quaternion.Euler(offsetRotationX, 0f, 0f);
 
         if (duration <= Mathf.Epsilon)
         {

@@ -197,12 +197,11 @@ MonoBehaviour:
   slashRollOffset: 90
   slashRotationToMouseLerpSpeed: 60
   slashWindupDuration: 0.5
-  slashTravelLerpSpeed: 30
-  slashCompleteDistance: 0.05
+  slashTravelDuration: 0.12
   minimumSlashDistance: 5
   followThroughRecoveryDuration: 0.2
-  windupRotationOffset: {x: -60, y: 0, z: 0}
-  followThroughRotationOffset: {x: 30, y: 0, z: 0}
+  windupRotationX: -30
+  followThroughRotationX: 30
   slashOffsetEase: 3
 --- !u!4 &283610446
 Transform:
