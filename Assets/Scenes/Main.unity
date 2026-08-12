@@ -202,7 +202,7 @@ MonoBehaviour:
   followThroughRecoveryDuration: 0.2
   windupRotationX: -30
   followThroughRotationX: 30
-  slashOffsetEase: 3
+  slashOffsetEase: 27
 --- !u!4 &283610446
 Transform:
   m_ObjectHideFlags: 0
