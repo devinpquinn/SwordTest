@@ -272,7 +272,7 @@ MonoBehaviour:
   windupHoldTime: 0.3
   windupEaseType: 9
   minSlashReach: 8
-  maxSlashReach: 12
+  maxSlashReach: 16
 --- !u!114 &60872333
 MonoBehaviour:
   m_ObjectHideFlags: 0
