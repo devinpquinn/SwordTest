@@ -6,7 +6,10 @@ public class NpcWeaponController : MonoBehaviour
 {
     [Header("Bounds")]
     [SerializeField] private Transform playCenter;
-    
+
+    [Header("Targeting")]
+    [SerializeField] private Transform playerHeart;
+
     [Header("Behavior")]
     [SerializeField] private float minSlashInterval = 2f;
     [SerializeField] private float maxSlashInterval = 4f;
@@ -70,12 +73,13 @@ public class NpcWeaponController : MonoBehaviour
         }
 
         Vector3 center = playCenter != null ? playCenter.position : transform.position;
+        Vector3 aimPoint = playerHeart != null ? playerHeart.position : center;
         float angle = Random.Range(0f, Mathf.PI * 2f);
         Vector3 axis = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
 
-        Vector3 startPoint = ClampToBounds(center + axis * Random.Range(minSlashReach, maxSlashReach), center);
+        Vector3 startPoint = ClampToBounds(aimPoint + axis * Random.Range(minSlashReach, maxSlashReach), center);
         pendingStartPoint = startPoint;
-        pendingEndPoint = ClampToBounds(center - axis * Random.Range(minSlashReach, maxSlashReach), center);
+        pendingEndPoint = ClampToBounds(aimPoint - axis * Random.Range(minSlashReach, maxSlashReach), center);
 
         weaponController.BeginSlashCharge(startPoint);
         isWindingUp = true;
