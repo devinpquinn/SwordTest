@@ -10,6 +10,7 @@ public class NpcWeaponController : MonoBehaviour
 
     [Header("Slash Timing")]
     [SerializeField] private float windupTime = 0.6f;
+    [SerializeField] private float windupHoldTime = 0.2f;
     [SerializeField] private float minSlashInterval = 2f;
     [SerializeField] private float maxSlashInterval = 4f;
     [SerializeField] private float minSlashReach = 3f;
@@ -49,7 +50,7 @@ public class NpcWeaponController : MonoBehaviour
 
             weaponController.SetTargetPosition(Vector3.Lerp(pendingStartPoint, pendingEndPoint, windupProgress));
 
-            if (windupProgress >= 1f)
+            if (Time.time - windupStartTime >= windupTime + windupHoldTime)
             {
                 isWindingUp = false;
                 weaponController.ReleaseSlash(pendingEndPoint);

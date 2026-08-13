@@ -266,7 +266,8 @@ MonoBehaviour:
   playCenter: {fileID: 1795179259}
   maxDistanceX: 20
   maxDistanceY: 10
-  windupTime: 1
+  windupTime: 0.5
+  windupHoldTime: 0.3
   minSlashInterval: 2
   maxSlashInterval: 2
   minSlashReach: 8
