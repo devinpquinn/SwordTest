@@ -12,6 +12,7 @@ public class WeaponController : MonoBehaviour
     
     [Header("Slash")]
     [SerializeField] private Transform weaponObject;
+    [SerializeField] private LineRenderer slashLineRenderer;
     [SerializeField] private float slashDuration = 0.5f;
     [SerializeField] private Ease slashEaseType = Ease.OutSine;
 
@@ -36,6 +37,7 @@ public class WeaponController : MonoBehaviour
     private bool isBouncingBack;
     private bool isBlocking;
     private Vector3 blockStartPosition;
+    private Vector3 slashStartPosition;
     private Vector3 slashDirection;
     private Vector3 previousWeaponPosition;
     private float slashSpeed;
@@ -59,6 +61,12 @@ public class WeaponController : MonoBehaviour
         if (blockObject != null)
         {
             blockObject.gameObject.SetActive(false);
+        }
+
+        if (slashLineRenderer != null)
+        {
+            slashLineRenderer.positionCount = 2;
+            slashLineRenderer.enabled = false;
         }
 
         if (weaponObject != null)
@@ -90,6 +98,27 @@ public class WeaponController : MonoBehaviour
             weaponObject.position = weaponTarget.position;
             weaponObject.gameObject.SetActive(false);
         }
+
+        UpdateSlashLine();
+    }
+
+    private void UpdateSlashLine()
+    {
+        if (slashLineRenderer == null)
+        {
+            return;
+        }
+
+        if (!isChargingSlash || weaponTarget == null)
+        {
+            slashLineRenderer.enabled = false;
+            return;
+        }
+
+        slashLineRenderer.enabled = true;
+        slashLineRenderer.positionCount = 2;
+        slashLineRenderer.SetPosition(0, slashStartPosition);
+        slashLineRenderer.SetPosition(1, weaponTarget.position);
     }
 
     private void UpdateMouseInput()
@@ -172,6 +201,7 @@ public class WeaponController : MonoBehaviour
         isChargingSlash = true;
         isExecutingSlash = false;
         isBouncingBack = false;
+        slashStartPosition = startPosition;
         weaponObject.position = startPosition;
         weaponObject.gameObject.SetActive(true);
 
@@ -190,6 +220,7 @@ public class WeaponController : MonoBehaviour
 
         isChargingSlash = false;
         weaponTarget.position = endPosition;
+        UpdateSlashLine();
         StartSlashTween();
     }
 
@@ -203,6 +234,7 @@ public class WeaponController : MonoBehaviour
         slashTween?.Kill();
         slashTween = null;
         isChargingSlash = false;
+        UpdateSlashLine();
 
         if (weaponObject != null)
         {
@@ -394,6 +426,11 @@ public class WeaponController : MonoBehaviour
         if (blockObject != null)
         {
             blockObject.gameObject.SetActive(false);
+        }
+
+        if (slashLineRenderer != null)
+        {
+            slashLineRenderer.enabled = false;
         }
     }
 }
