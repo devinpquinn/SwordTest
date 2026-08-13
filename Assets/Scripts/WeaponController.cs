@@ -4,6 +4,7 @@ using DG.Tweening;
 public class WeaponController : MonoBehaviour
 {
     [Header("Movement")]
+    [SerializeField] private bool useMouseInput = true;
     [SerializeField] private Transform weaponTarget;
     [SerializeField] private float lerpSpeed = 50f;
     [SerializeField] private float maxDistanceX = 10f;
@@ -44,7 +45,10 @@ public class WeaponController : MonoBehaviour
     private void Awake()
     {
         mainCamera = Camera.main;
-        Cursor.visible = false;
+        if (useMouseInput)
+        {
+            Cursor.visible = false;
+        }
 
         if (weaponTarget != null && weaponObject != null)
         {
@@ -65,13 +69,32 @@ public class WeaponController : MonoBehaviour
                 relay = weaponObject.gameObject.AddComponent<WeaponBlockRelay>();
             }
 
-            relay.Initialize(this);
+            relay.Initialize(NotifyBlocked);
         }
     }
 
     private void Update()
     {
-        if (weaponTarget == null || mainCamera == null)
+        if (weaponTarget == null)
+        {
+            return;
+        }
+
+        if (useMouseInput)
+        {
+            UpdateMouseInput();
+        }
+
+        if (weaponObject != null && !IsBusy)
+        {
+            weaponObject.position = weaponTarget.position;
+            weaponObject.gameObject.SetActive(false);
+        }
+    }
+
+    private void UpdateMouseInput()
+    {
+        if (mainCamera == null)
         {
             return;
         }
@@ -95,25 +118,45 @@ public class WeaponController : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            slashTween?.Kill();
-            slashTween = null;
-            isChargingSlash = true;
-            isExecutingSlash = false;
-            isBouncingBack = false;
-            weaponObject.gameObject.SetActive(true);
+            BeginSlashCharge(weaponTarget.position);
         }
 
         if (Input.GetMouseButtonUp(0) && isChargingSlash)
         {
-            isChargingSlash = false;
-            StartSlashTween();
+            ReleaseSlash(weaponTarget.position);
+        }
+    }
+
+    public bool IsBusy => isChargingSlash || isExecutingSlash || isBouncingBack;
+
+    public event System.Action SlashFinished;
+
+    public void BeginSlashCharge(Vector3 startPosition)
+    {
+        if (weaponObject == null)
+        {
+            return;
         }
 
-        if (!isChargingSlash && !isExecutingSlash && !isBouncingBack)
+        slashTween?.Kill();
+        slashTween = null;
+        isChargingSlash = true;
+        isExecutingSlash = false;
+        isBouncingBack = false;
+        weaponObject.position = startPosition;
+        weaponObject.gameObject.SetActive(true);
+    }
+
+    public void ReleaseSlash(Vector3 endPosition)
+    {
+        if (weaponObject == null || weaponTarget == null)
         {
-            weaponObject.position = weaponTarget.position;
-            weaponObject.gameObject.SetActive(false);
+            return;
         }
+
+        isChargingSlash = false;
+        weaponTarget.position = endPosition;
+        StartSlashTween();
     }
 
     private void StartSlashTween()
@@ -138,6 +181,7 @@ public class WeaponController : MonoBehaviour
                 weaponObject.position = weaponTarget.position;
                 weaponObject.gameObject.SetActive(false);
                 slashTween = null;
+                SlashFinished?.Invoke();
             });
     }
 
@@ -272,6 +316,7 @@ public class WeaponController : MonoBehaviour
                 }
 
                 weaponObject.gameObject.SetActive(false);
+                SlashFinished?.Invoke();
             });
     }
 
@@ -297,20 +342,20 @@ public class WeaponController : MonoBehaviour
 
 public class WeaponBlockRelay : MonoBehaviour
 {
-    private WeaponController owner;
+    private System.Action<GameObject> onBlocked;
 
-    internal void Initialize(WeaponController weaponController)
+    internal void Initialize(System.Action<GameObject> blockedCallback)
     {
-        owner = weaponController;
+        onBlocked = blockedCallback;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        owner?.NotifyBlocked(other.gameObject);
+        onBlocked?.Invoke(other.gameObject);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        owner?.NotifyBlocked(other.gameObject);
+        onBlocked?.Invoke(other.gameObject);
     }
 }
