@@ -9,6 +9,7 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private float maxDistanceY = 10f;
 
     [Header("Slash Timing")]
+    [SerializeField] private float windupTime = 0.6f;
     [SerializeField] private float minSlashInterval = 2f;
     [SerializeField] private float maxSlashInterval = 4f;
     [SerializeField] private float minSlashReach = 3f;
@@ -16,6 +17,9 @@ public class NpcWeaponController : MonoBehaviour
 
     private WeaponController weaponController;
     private float nextSlashTime;
+    private bool isWindingUp;
+    private float releaseTime;
+    private Vector3 pendingEndPoint;
 
     private void Awake()
     {
@@ -31,10 +35,24 @@ public class NpcWeaponController : MonoBehaviour
     private void OnDisable()
     {
         weaponController.SlashFinished -= ScheduleNextSlash;
+        isWindingUp = false;
     }
 
     private void Update()
     {
+        if (isWindingUp)
+        {
+            weaponController.MoveTargetTowards(pendingEndPoint);
+
+            if (Time.time >= releaseTime)
+            {
+                isWindingUp = false;
+                weaponController.ReleaseSlash(pendingEndPoint);
+            }
+
+            return;
+        }
+
         if (weaponController.IsBusy || Time.time < nextSlashTime)
         {
             return;
@@ -45,10 +63,11 @@ public class NpcWeaponController : MonoBehaviour
         Vector3 axis = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
 
         Vector3 startPoint = ClampToBounds(center + axis * Random.Range(minSlashReach, maxSlashReach), center);
-        Vector3 endPoint = ClampToBounds(center - axis * Random.Range(minSlashReach, maxSlashReach), center);
+        pendingEndPoint = ClampToBounds(center - axis * Random.Range(minSlashReach, maxSlashReach), center);
 
         weaponController.BeginSlashCharge(startPoint);
-        weaponController.ReleaseSlash(endPoint);
+        isWindingUp = true;
+        releaseTime = Time.time + windupTime;
     }
 
     private void ScheduleNextSlash()

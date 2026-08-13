@@ -107,7 +107,7 @@ public class WeaponController : MonoBehaviour
         float clampedY = Mathf.Clamp(mouseWorldPosition.y, -maxDistanceY, maxDistanceY);
 
         Vector3 targetPosition = new Vector3(clampedX, clampedY, weaponTarget.position.z);
-        weaponTarget.position = Vector3.Lerp(weaponTarget.position, targetPosition, lerpSpeed * Time.deltaTime);
+        MoveTargetTowards(targetPosition);
 
         UpdateBlockObject(targetPosition);
 
@@ -131,6 +131,16 @@ public class WeaponController : MonoBehaviour
 
     public event System.Action SlashFinished;
 
+    public void MoveTargetTowards(Vector3 position)
+    {
+        if (weaponTarget == null)
+        {
+            return;
+        }
+
+        weaponTarget.position = Vector3.Lerp(weaponTarget.position, position, lerpSpeed * Time.deltaTime);
+    }
+
     public void BeginSlashCharge(Vector3 startPosition)
     {
         if (weaponObject == null)
@@ -145,6 +155,11 @@ public class WeaponController : MonoBehaviour
         isBouncingBack = false;
         weaponObject.position = startPosition;
         weaponObject.gameObject.SetActive(true);
+
+        if (weaponTarget != null)
+        {
+            weaponTarget.position = startPosition;
+        }
     }
 
     public void ReleaseSlash(Vector3 endPosition)
