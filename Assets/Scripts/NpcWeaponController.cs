@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 
 [RequireComponent(typeof(WeaponController))]
 public class NpcWeaponController : MonoBehaviour
@@ -10,6 +11,7 @@ public class NpcWeaponController : MonoBehaviour
 
     [Header("Slash Timing")]
     [SerializeField] private float windupTime = 0.6f;
+    [SerializeField] private Ease windupEaseType = Ease.OutSine;
     [SerializeField] private float windupHoldTime = 0.2f;
     [SerializeField] private float minSlashInterval = 2f;
     [SerializeField] private float maxSlashInterval = 4f;
@@ -48,7 +50,10 @@ public class NpcWeaponController : MonoBehaviour
                 ? Mathf.Clamp01((Time.time - windupStartTime) / windupTime)
                 : 1f;
 
-            weaponController.SetTargetPosition(Vector3.Lerp(pendingStartPoint, pendingEndPoint, windupProgress));
+            weaponController.SetTargetPosition(Vector3.LerpUnclamped(
+                pendingStartPoint,
+                pendingEndPoint,
+                DOVirtual.EasedValue(0f, 1f, windupProgress, windupEaseType)));
 
             if (Time.time - windupStartTime >= windupTime + windupHoldTime)
             {

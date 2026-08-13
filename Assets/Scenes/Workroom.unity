@@ -267,6 +267,7 @@ MonoBehaviour:
   maxDistanceX: 20
   maxDistanceY: 10
   windupTime: 0.5
+  windupEaseType: 9
   windupHoldTime: 0.3
   minSlashInterval: 2
   maxSlashInterval: 2
