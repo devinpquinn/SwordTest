@@ -728,6 +728,7 @@ MonoBehaviour:
   bounceBackDuration: 0.2
   bounceBackDistance: 5
   bounceBackEaseType: 27
+  blockSweepRadius: 0.5
 --- !u!23 &1611238763
 MeshRenderer:
   m_ObjectHideFlags: 0

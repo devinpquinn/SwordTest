@@ -17,13 +17,16 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float bounceBackDuration = 0.2f;
     [SerializeField] private float bounceBackDistance = 1f;
     [SerializeField] private Ease bounceBackEaseType = Ease.OutQuad;
+    [SerializeField] private float blockSweepRadius = 0.1f;
 
     private Camera mainCamera;
     private bool isChargingSlash;
     private bool isExecutingSlash;
     private bool isBouncingBack;
     private Vector3 slashDirection;
+    private Vector3 previousWeaponPosition;
     private Tween slashTween;
+    private readonly RaycastHit[] sweepHits = new RaycastHit[8];
 
     private void Awake()
     {
@@ -103,6 +106,7 @@ public class WeaponController : MonoBehaviour
         isExecutingSlash = true;
         isBouncingBack = false;
         slashDirection = (weaponTarget.position - weaponObject.position).normalized;
+        previousWeaponPosition = weaponObject.position;
         slashTween?.Kill();
         slashTween = weaponObject
             .DOMove(weaponTarget.position, slashDuration)
@@ -114,6 +118,60 @@ public class WeaponController : MonoBehaviour
                 weaponObject.gameObject.SetActive(false);
                 slashTween = null;
             });
+    }
+
+    // Tween-driven motion teleports the transform, so sweep between frames to catch blockers the collider skipped over.
+    private void LateUpdate()
+    {
+        if (!isExecutingSlash || weaponObject == null)
+        {
+            return;
+        }
+
+        Vector3 startPosition = previousWeaponPosition;
+        Vector3 currentPosition = weaponObject.position;
+        Vector3 delta = currentPosition - startPosition;
+        previousWeaponPosition = currentPosition;
+
+        float distance = delta.magnitude;
+        if (distance <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        int hitCount = Physics.SphereCastNonAlloc(
+            startPosition,
+            Mathf.Max(blockSweepRadius, 0.001f),
+            delta / distance,
+            sweepHits,
+            distance,
+            blockLayers,
+            QueryTriggerInteraction.Collide);
+
+        int closestIndex = -1;
+        float closestDistance = float.MaxValue;
+        for (int i = 0; i < hitCount; i++)
+        {
+            if (sweepHits[i].collider.transform.IsChildOf(weaponObject))
+            {
+                continue;
+            }
+
+            if (sweepHits[i].distance < closestDistance)
+            {
+                closestDistance = sweepHits[i].distance;
+                closestIndex = i;
+            }
+        }
+
+        if (closestIndex < 0)
+        {
+            return;
+        }
+
+        weaponObject.position = startPosition + delta.normalized * closestDistance;
+        previousWeaponPosition = weaponObject.position;
+        NotifyBlocked(sweepHits[closestIndex].collider.gameObject);
     }
 
     internal void NotifyBlocked(GameObject blocker)
