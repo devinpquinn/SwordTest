@@ -6,15 +6,15 @@ public class NpcWeaponController : MonoBehaviour
 {
     [Header("Bounds")]
     [SerializeField] private Transform playCenter;
-    [SerializeField] private float maxDistanceX = 10f;
-    [SerializeField] private float maxDistanceY = 10f;
-
-    [Header("Slash Timing")]
-    [SerializeField] private float windupTime = 0.6f;
-    [SerializeField] private Ease windupEaseType = Ease.OutSine;
-    [SerializeField] private float windupHoldTime = 0.2f;
+    
+    [Header("Behavior")]
     [SerializeField] private float minSlashInterval = 2f;
     [SerializeField] private float maxSlashInterval = 4f;
+
+    [Header("Slash")]
+    [SerializeField] private float windupTime = 0.6f;
+    [SerializeField] private float windupHoldTime = 0.2f;
+    [SerializeField] private Ease windupEaseType = Ease.OutSine;
     [SerializeField] private float minSlashReach = 3f;
     [SerializeField] private float maxSlashReach = 8f;
 
@@ -90,8 +90,8 @@ public class NpcWeaponController : MonoBehaviour
     private Vector3 ClampToBounds(Vector3 point, Vector3 center)
     {
         return new Vector3(
-            Mathf.Clamp(point.x, center.x - maxDistanceX, center.x + maxDistanceX),
-            Mathf.Clamp(point.y, center.y - maxDistanceY, center.y + maxDistanceY),
+            Mathf.Clamp(point.x, center.x - weaponController.MaxDistanceX, center.x + weaponController.MaxDistanceX),
+            Mathf.Clamp(point.y, center.y - weaponController.MaxDistanceY, center.y + weaponController.MaxDistanceY),
             center.z);
     }
 }

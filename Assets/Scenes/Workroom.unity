@@ -245,7 +245,7 @@ GameObject:
   - component: {fileID: 60872333}
   - component: {fileID: 60872332}
   m_Layer: 0
-  m_Name: EnemyPointer
+  m_Name: ENEMY POINTER
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -264,13 +264,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcWeaponController
   playCenter: {fileID: 1795179259}
-  maxDistanceX: 20
-  maxDistanceY: 10
-  windupTime: 0.5
-  windupEaseType: 9
-  windupHoldTime: 0.3
   minSlashInterval: 2
   maxSlashInterval: 2
+  windupTime: 0.5
+  windupHoldTime: 0.3
+  windupEaseType: 9
   minSlashReach: 8
   maxSlashReach: 12
 --- !u!114 &60872333
@@ -1178,7 +1176,7 @@ GameObject:
   - component: {fileID: 1611238763}
   - component: {fileID: 1611238761}
   m_Layer: 0
-  m_Name: PlayerPointer
+  m_Name: PLAYER POINTER
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

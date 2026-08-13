@@ -129,6 +129,10 @@ public class WeaponController : MonoBehaviour
 
     public bool IsBusy => isChargingSlash || isExecutingSlash || isBouncingBack;
 
+    public float MaxDistanceX => maxDistanceX;
+
+    public float MaxDistanceY => maxDistanceY;
+
     public event System.Action SlashFinished;
 
     public void MoveTargetTowards(Vector3 position)
