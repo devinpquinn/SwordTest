@@ -24,10 +24,17 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private Ease bounceBackEaseType = Ease.OutQuad;
     [SerializeField] private float blockSweepRadius = 0.1f;
 
+    [Header("Block Object")]
+    [SerializeField] private Transform blockObject;
+    [SerializeField] private float blockObjectThickness = 0.2f;
+    [SerializeField] private float minBlockLength = 0.1f;
+
     private Camera mainCamera;
     private bool isChargingSlash;
     private bool isExecutingSlash;
     private bool isBouncingBack;
+    private bool isBlocking;
+    private Vector3 blockStartPosition;
     private Vector3 slashDirection;
     private Vector3 previousWeaponPosition;
     private float slashSpeed;
@@ -43,6 +50,11 @@ public class WeaponController : MonoBehaviour
         {
             weaponObject.position = weaponTarget.position;
             weaponObject.gameObject.SetActive(false);
+        }
+
+        if (blockObject != null)
+        {
+            blockObject.gameObject.SetActive(false);
         }
 
         if (weaponObject != null)
@@ -73,6 +85,8 @@ public class WeaponController : MonoBehaviour
 
         Vector3 targetPosition = new Vector3(clampedX, clampedY, weaponTarget.position.z);
         weaponTarget.position = Vector3.Lerp(weaponTarget.position, targetPosition, lerpSpeed * Time.deltaTime);
+
+        UpdateBlockObject(targetPosition);
 
         if (weaponObject == null)
         {
@@ -125,6 +139,43 @@ public class WeaponController : MonoBehaviour
                 weaponObject.gameObject.SetActive(false);
                 slashTween = null;
             });
+    }
+
+    // Block object is scaled along its local X, so its pivot must sit at the end that stays on the drag start point.
+    private void UpdateBlockObject(Vector3 pointerPosition)
+    {
+        if (blockObject == null)
+        {
+            return;
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            isBlocking = true;
+            blockStartPosition = pointerPosition;
+            blockObject.gameObject.SetActive(true);
+        }
+
+        if (Input.GetMouseButtonUp(1))
+        {
+            isBlocking = false;
+            blockObject.gameObject.SetActive(false);
+        }
+
+        if (!isBlocking)
+        {
+            return;
+        }
+
+        Vector3 delta = pointerPosition - blockStartPosition;
+        blockObject.position = blockStartPosition;
+
+        if (delta.sqrMagnitude > Mathf.Epsilon)
+        {
+            blockObject.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+        }
+
+        blockObject.localScale = new Vector3(Mathf.Max(delta.magnitude, minBlockLength), blockObjectThickness, blockObjectThickness);
     }
 
     // Tween-driven motion teleports the transform, so sweep between frames to catch blockers the collider skipped over.
@@ -231,9 +282,15 @@ public class WeaponController : MonoBehaviour
         isChargingSlash = false;
         isExecutingSlash = false;
         isBouncingBack = false;
+        isBlocking = false;
         if (weaponObject != null)
         {
             weaponObject.gameObject.SetActive(false);
+        }
+
+        if (blockObject != null)
+        {
+            blockObject.gameObject.SetActive(false);
         }
     }
 }
