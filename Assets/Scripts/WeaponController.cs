@@ -5,12 +5,14 @@ public class WeaponController : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private Transform weaponTarget;
-    [SerializeField] private Transform weaponObject;
-    [SerializeField] private float slashDuration = 0.5f;
-    [SerializeField] private Ease slashEaseType = Ease.OutSine;
     [SerializeField] private float lerpSpeed = 50f;
     [SerializeField] private float maxDistanceX = 10f;
     [SerializeField] private float maxDistanceY = 10f;
+    
+    [Header("Slash")]
+    [SerializeField] private Transform weaponObject;
+    [SerializeField] private float slashDuration = 0.5f;
+    [SerializeField] private Ease slashEaseType = Ease.OutSine;
 
     [Header("Block")]
     [SerializeField] private LayerMask blockLayers = ~0;
@@ -198,7 +200,7 @@ public class WeaponController : MonoBehaviour
         slashTween = null;
         isExecutingSlash = false;
         
-        Debug.Log("Weapon speed: " + slashSpeed + " units/sec");
+        // Debug.Log("Weapon speed: " + slashSpeed + " units/sec");
 
         Vector3 bounceDirection = slashDirection.sqrMagnitude > Mathf.Epsilon ? -slashDirection : Vector3.zero;
         float speedWeight = Mathf.InverseLerp(minBounceBackSpeed, maxBounceBackSpeed, slashSpeed);
