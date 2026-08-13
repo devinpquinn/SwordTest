@@ -289,12 +289,12 @@ MonoBehaviour:
   maxDistanceX: 20
   maxDistanceY: 10
   weaponObject: {fileID: 1306503455}
-  slashDuration: 0.25
+  slashDuration: 0.3
   slashEaseType: 27
   blockLayers:
     serializedVersion: 2
     m_Bits: 128
-  bounceBackDuration: 0.25
+  bounceBackDuration: 0.3
   minBounceBackDistance: 1
   maxBounceBackDistance: 5
   minBounceBackSpeed: 135
@@ -1200,7 +1200,7 @@ MonoBehaviour:
   maxDistanceX: 20
   maxDistanceY: 10
   weaponObject: {fileID: 710469881}
-  slashDuration: 0.25
+  slashDuration: 0.2
   slashEaseType: 27
   blockLayers:
     serializedVersion: 2

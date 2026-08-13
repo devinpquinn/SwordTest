@@ -116,6 +116,11 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
+        if (Input.GetMouseButtonDown(1) && isChargingSlash)
+        {
+            CancelSlashCharge();
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             BeginSlashCharge(weaponTarget.position);
@@ -186,6 +191,30 @@ public class WeaponController : MonoBehaviour
         isChargingSlash = false;
         weaponTarget.position = endPosition;
         StartSlashTween();
+    }
+
+    public void CancelSlashCharge()
+    {
+        if (!isChargingSlash)
+        {
+            return;
+        }
+
+        slashTween?.Kill();
+        slashTween = null;
+        isChargingSlash = false;
+
+        if (weaponObject != null)
+        {
+            if (weaponTarget != null)
+            {
+                weaponObject.position = weaponTarget.position;
+            }
+
+            weaponObject.gameObject.SetActive(false);
+        }
+
+        SlashFinished?.Invoke();
     }
 
     private void StartSlashTween()
