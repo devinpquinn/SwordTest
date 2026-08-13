@@ -12,9 +12,17 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float maxDistanceX = 10f;
     [SerializeField] private float maxDistanceY = 10f;
 
+    [Header("Block")]
+    [SerializeField] private LayerMask blockLayers = ~0;
+    [SerializeField] private float bounceBackDuration = 0.2f;
+    [SerializeField] private float bounceBackDistance = 1f;
+    [SerializeField] private Ease bounceBackEaseType = Ease.OutQuad;
+
     private Camera mainCamera;
     private bool isChargingSlash;
     private bool isExecutingSlash;
+    private bool isBouncingBack;
+    private Vector3 slashDirection;
     private Tween slashTween;
 
     private void Awake()
@@ -26,6 +34,17 @@ public class WeaponController : MonoBehaviour
         {
             weaponObject.position = weaponTarget.position;
             weaponObject.gameObject.SetActive(false);
+        }
+
+        if (weaponObject != null)
+        {
+            WeaponBlockRelay relay = weaponObject.GetComponent<WeaponBlockRelay>();
+            if (relay == null)
+            {
+                relay = weaponObject.gameObject.AddComponent<WeaponBlockRelay>();
+            }
+
+            relay.Initialize(this);
         }
     }
 
@@ -57,6 +76,7 @@ public class WeaponController : MonoBehaviour
             slashTween = null;
             isChargingSlash = true;
             isExecutingSlash = false;
+            isBouncingBack = false;
             weaponObject.gameObject.SetActive(true);
         }
 
@@ -66,7 +86,7 @@ public class WeaponController : MonoBehaviour
             StartSlashTween();
         }
 
-        if (!isChargingSlash && !isExecutingSlash)
+        if (!isChargingSlash && !isExecutingSlash && !isBouncingBack)
         {
             weaponObject.position = weaponTarget.position;
             weaponObject.gameObject.SetActive(false);
@@ -81,6 +101,8 @@ public class WeaponController : MonoBehaviour
         }
 
         isExecutingSlash = true;
+        isBouncingBack = false;
+        slashDirection = (weaponTarget.position - weaponObject.position).normalized;
         slashTween?.Kill();
         slashTween = weaponObject
             .DOMove(weaponTarget.position, slashDuration)
@@ -94,15 +116,72 @@ public class WeaponController : MonoBehaviour
             });
     }
 
+    internal void NotifyBlocked(GameObject blocker)
+    {
+        if (!isExecutingSlash || isBouncingBack || weaponObject == null)
+        {
+            return;
+        }
+
+        if (blocker == null || (blockLayers.value & (1 << blocker.layer)) == 0)
+        {
+            return;
+        }
+
+        slashTween?.Kill();
+        slashTween = null;
+        isExecutingSlash = false;
+
+        Vector3 bounceDirection = slashDirection.sqrMagnitude > Mathf.Epsilon ? -slashDirection : Vector3.zero;
+        Vector3 bounceTarget = weaponObject.position + bounceDirection * bounceBackDistance;
+
+        isBouncingBack = true;
+        slashTween = weaponObject
+            .DOMove(bounceTarget, bounceBackDuration)
+            .SetEase(bounceBackEaseType)
+            .OnComplete(() =>
+            {
+                isBouncingBack = false;
+                slashTween = null;
+                if (weaponTarget != null)
+                {
+                    weaponObject.position = weaponTarget.position;
+                }
+
+                weaponObject.gameObject.SetActive(false);
+            });
+    }
+
     private void OnDisable()
     {
         slashTween?.Kill();
         slashTween = null;
         isChargingSlash = false;
         isExecutingSlash = false;
+        isBouncingBack = false;
         if (weaponObject != null)
         {
             weaponObject.gameObject.SetActive(false);
         }
+    }
+}
+
+public class WeaponBlockRelay : MonoBehaviour
+{
+    private WeaponController owner;
+
+    internal void Initialize(WeaponController weaponController)
+    {
+        owner = weaponController;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        owner?.NotifyBlocked(other.gameObject);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        owner?.NotifyBlocked(other.gameObject);
     }
 }
