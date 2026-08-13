@@ -284,7 +284,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cbdb808eca91f14ab18d8077affef44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponController
-  useMouseInput: 0
+  isPlayer: 0
   weaponTarget: {fileID: 60872336}
   lerpSpeed: 50
   maxDistanceX: 20
@@ -1307,7 +1307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cbdb808eca91f14ab18d8077affef44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponController
-  useMouseInput: 1
+  isPlayer: 1
   weaponTarget: {fileID: 1611238765}
   lerpSpeed: 50
   maxDistanceX: 20

@@ -4,7 +4,7 @@ using DG.Tweening;
 public class WeaponController : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private bool useMouseInput = true;
+    [SerializeField] private bool isPlayer = true;
     [SerializeField] private Transform weaponTarget;
     [SerializeField] private float lerpSpeed = 50f;
     [SerializeField] private float maxDistanceX = 10f;
@@ -47,7 +47,7 @@ public class WeaponController : MonoBehaviour
     private void Awake()
     {
         mainCamera = Camera.main;
-        if (useMouseInput)
+        if (isPlayer)
         {
             Cursor.visible = false;
         }
@@ -88,7 +88,7 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        if (useMouseInput)
+        if (isPlayer)
         {
             UpdateMouseInput();
         }
