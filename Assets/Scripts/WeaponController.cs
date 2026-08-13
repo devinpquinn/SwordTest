@@ -15,7 +15,10 @@ public class WeaponController : MonoBehaviour
     [Header("Block")]
     [SerializeField] private LayerMask blockLayers = ~0;
     [SerializeField] private float bounceBackDuration = 0.2f;
-    [SerializeField] private float bounceBackDistance = 1f;
+    [SerializeField] private float minBounceBackDistance = 1f;
+    [SerializeField] private float maxBounceBackDistance = 3f;
+    [SerializeField] private float minBounceBackSpeed = 0f;
+    [SerializeField] private float maxBounceBackSpeed = 40f;
     [SerializeField] private Ease bounceBackEaseType = Ease.OutQuad;
     [SerializeField] private float blockSweepRadius = 0.1f;
 
@@ -25,6 +28,7 @@ public class WeaponController : MonoBehaviour
     private bool isBouncingBack;
     private Vector3 slashDirection;
     private Vector3 previousWeaponPosition;
+    private float slashSpeed;
     private Tween slashTween;
     private readonly RaycastHit[] sweepHits = new RaycastHit[8];
 
@@ -107,6 +111,7 @@ public class WeaponController : MonoBehaviour
         isBouncingBack = false;
         slashDirection = (weaponTarget.position - weaponObject.position).normalized;
         previousWeaponPosition = weaponObject.position;
+        slashSpeed = 0f;
         slashTween?.Kill();
         slashTween = weaponObject
             .DOMove(weaponTarget.position, slashDuration)
@@ -136,8 +141,11 @@ public class WeaponController : MonoBehaviour
         float distance = delta.magnitude;
         if (distance <= Mathf.Epsilon)
         {
+            slashSpeed = 0f;
             return;
         }
+
+        slashSpeed = Time.deltaTime > Mathf.Epsilon ? distance / Time.deltaTime : 0f;
 
         int hitCount = Physics.SphereCastNonAlloc(
             startPosition,
@@ -189,9 +197,13 @@ public class WeaponController : MonoBehaviour
         slashTween?.Kill();
         slashTween = null;
         isExecutingSlash = false;
+        
+        Debug.Log("Weapon speed: " + slashSpeed + " units/sec");
 
         Vector3 bounceDirection = slashDirection.sqrMagnitude > Mathf.Epsilon ? -slashDirection : Vector3.zero;
-        Vector3 bounceTarget = weaponObject.position + bounceDirection * bounceBackDistance;
+        float speedWeight = Mathf.InverseLerp(minBounceBackSpeed, maxBounceBackSpeed, slashSpeed);
+        float speedScaledDistance = Mathf.Lerp(minBounceBackDistance, maxBounceBackDistance, speedWeight);
+        Vector3 bounceTarget = weaponObject.position + bounceDirection * speedScaledDistance;
 
         isBouncingBack = true;
         slashTween = weaponObject

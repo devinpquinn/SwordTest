@@ -725,8 +725,11 @@ MonoBehaviour:
   blockLayers:
     serializedVersion: 2
     m_Bits: 128
-  bounceBackDuration: 0.2
-  bounceBackDistance: 5
+  bounceBackDuration: 0.25
+  minBounceBackDistance: 1
+  maxBounceBackDistance: 5
+  minBounceBackSpeed: 135
+  maxBounceBackSpeed: 375
   bounceBackEaseType: 27
   blockSweepRadius: 0.5
 --- !u!23 &1611238763
