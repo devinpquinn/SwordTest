@@ -267,8 +267,8 @@ MonoBehaviour:
   maxDistanceX: 20
   maxDistanceY: 10
   windupTime: 1
-  minSlashInterval: 3
-  maxSlashInterval: 3
+  minSlashInterval: 2
+  maxSlashInterval: 2
   minSlashReach: 8
   maxSlashReach: 12
 --- !u!114 &60872333

@@ -141,6 +141,16 @@ public class WeaponController : MonoBehaviour
         weaponTarget.position = Vector3.Lerp(weaponTarget.position, position, lerpSpeed * Time.deltaTime);
     }
 
+    public void SetTargetPosition(Vector3 position)
+    {
+        if (weaponTarget == null)
+        {
+            return;
+        }
+
+        weaponTarget.position = position;
+    }
+
     public void BeginSlashCharge(Vector3 startPosition)
     {
         if (weaponObject == null)

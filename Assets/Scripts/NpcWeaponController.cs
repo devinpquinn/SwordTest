@@ -18,7 +18,8 @@ public class NpcWeaponController : MonoBehaviour
     private WeaponController weaponController;
     private float nextSlashTime;
     private bool isWindingUp;
-    private float releaseTime;
+    private float windupStartTime;
+    private Vector3 pendingStartPoint;
     private Vector3 pendingEndPoint;
 
     private void Awake()
@@ -42,9 +43,13 @@ public class NpcWeaponController : MonoBehaviour
     {
         if (isWindingUp)
         {
-            weaponController.MoveTargetTowards(pendingEndPoint);
+            float windupProgress = windupTime > Mathf.Epsilon
+                ? Mathf.Clamp01((Time.time - windupStartTime) / windupTime)
+                : 1f;
 
-            if (Time.time >= releaseTime)
+            weaponController.SetTargetPosition(Vector3.Lerp(pendingStartPoint, pendingEndPoint, windupProgress));
+
+            if (windupProgress >= 1f)
             {
                 isWindingUp = false;
                 weaponController.ReleaseSlash(pendingEndPoint);
@@ -63,11 +68,12 @@ public class NpcWeaponController : MonoBehaviour
         Vector3 axis = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
 
         Vector3 startPoint = ClampToBounds(center + axis * Random.Range(minSlashReach, maxSlashReach), center);
+        pendingStartPoint = startPoint;
         pendingEndPoint = ClampToBounds(center - axis * Random.Range(minSlashReach, maxSlashReach), center);
 
         weaponController.BeginSlashCharge(startPoint);
         isWindingUp = true;
-        releaseTime = Time.time + windupTime;
+        windupStartTime = Time.time;
     }
 
     private void ScheduleNextSlash()
