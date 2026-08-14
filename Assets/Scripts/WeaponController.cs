@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using DG.Tweening;
 
 public class WeaponController : MonoBehaviour
@@ -31,6 +32,13 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float blockObjectThickness = 0.2f;
     [SerializeField] private float minBlockLength = 0.1f;
 
+    [Header("Stamina")]
+    [SerializeField] private float maxStamina = 100f;
+    [SerializeField] private float slashStaminaCost = 25f;
+    [SerializeField] private float staminaRecoveryRate = 20f;
+    [SerializeField] private Image staminaBar;
+
+    private float currentStamina;
     private Camera mainCamera;
     private bool isChargingSlash;
     private bool isExecutingSlash;
@@ -48,6 +56,9 @@ public class WeaponController : MonoBehaviour
     private void Awake()
     {
         mainCamera = Camera.main;
+        currentStamina = maxStamina;
+        UpdateStaminaBar();
+
         if (isPlayer)
         {
             Cursor.visible = false;
@@ -106,8 +117,34 @@ public class WeaponController : MonoBehaviour
             weaponObject.gameObject.SetActive(false);
         }
 
+        RecoverStamina();
         UpdateSlashLine();
         UpdateBlockLine();
+    }
+
+    public float CurrentStamina => currentStamina;
+
+    public bool HasStaminaForSlash => currentStamina >= slashStaminaCost;
+
+    private void RecoverStamina()
+    {
+        if (currentStamina >= maxStamina)
+        {
+            return;
+        }
+
+        currentStamina = Mathf.Min(currentStamina + staminaRecoveryRate * Time.deltaTime, maxStamina);
+        UpdateStaminaBar();
+    }
+
+    private void UpdateStaminaBar()
+    {
+        if (staminaBar == null)
+        {
+            return;
+        }
+
+        staminaBar.fillAmount = maxStamina > Mathf.Epsilon ? currentStamina / maxStamina : 0f;
     }
 
     private void UpdateBlockLine()
@@ -242,6 +279,15 @@ public class WeaponController : MonoBehaviour
         {
             return;
         }
+
+        if (!HasStaminaForSlash)
+        {
+            CancelSlashCharge();
+            return;
+        }
+
+        currentStamina = Mathf.Max(currentStamina - slashStaminaCost, 0f);
+        UpdateStaminaBar();
 
         isChargingSlash = false;
         weaponTarget.position = endPosition;
