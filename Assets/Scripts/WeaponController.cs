@@ -7,8 +7,6 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private bool isPlayer = true;
     [SerializeField] private Transform weaponTarget;
     [SerializeField] private float lerpSpeed = 50f;
-    [SerializeField] private float maxDistanceX = 10f;
-    [SerializeField] private float maxDistanceY = 10f;
     
     [Header("Slash")]
     [SerializeField] private Transform weaponObject;
@@ -161,10 +159,7 @@ public class WeaponController : MonoBehaviour
         mouseScreenPosition.z = Mathf.Abs(mainCamera.transform.position.z - transform.position.z);
 
         Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(mouseScreenPosition);
-        float clampedX = Mathf.Clamp(mouseWorldPosition.x, -maxDistanceX, maxDistanceX);
-        float clampedY = Mathf.Clamp(mouseWorldPosition.y, -maxDistanceY, maxDistanceY);
-
-        Vector3 targetPosition = new Vector3(clampedX, clampedY, weaponTarget.position.z);
+        Vector3 targetPosition = new Vector3(mouseWorldPosition.x, mouseWorldPosition.y, weaponTarget.position.z);
         MoveTargetTowards(targetPosition);
 
         UpdateBlockObject(targetPosition);
@@ -191,10 +186,6 @@ public class WeaponController : MonoBehaviour
     }
 
     public bool IsBusy => isChargingSlash || isExecutingSlash || isBouncingBack;
-
-    public float MaxDistanceX => maxDistanceX;
-
-    public float MaxDistanceY => maxDistanceY;
 
     public event System.Action SlashFinished;
 

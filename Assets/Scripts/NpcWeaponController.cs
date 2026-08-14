@@ -6,6 +6,8 @@ public class NpcWeaponController : MonoBehaviour
 {
     [Header("Bounds")]
     [SerializeField] private Transform playCenter;
+    [SerializeField] private float maxDistanceX = 20f;
+    [SerializeField] private float maxDistanceY = 10f;
 
     [Header("Targeting")]
     [SerializeField] private Transform playerHeart;
@@ -94,8 +96,8 @@ public class NpcWeaponController : MonoBehaviour
     private Vector3 ClampToBounds(Vector3 point, Vector3 center)
     {
         return new Vector3(
-            Mathf.Clamp(point.x, center.x - weaponController.MaxDistanceX, center.x + weaponController.MaxDistanceX),
-            Mathf.Clamp(point.y, center.y - weaponController.MaxDistanceY, center.y + weaponController.MaxDistanceY),
+            Mathf.Clamp(point.x, center.x - maxDistanceX, center.x + maxDistanceX),
+            Mathf.Clamp(point.y, center.y - maxDistanceY, center.y + maxDistanceY),
             center.z);
     }
 }
