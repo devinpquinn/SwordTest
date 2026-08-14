@@ -37,6 +37,8 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float slashStaminaCost = 25f;
     [SerializeField] private float staminaRecoveryRate = 20f;
     [SerializeField] private Image staminaBar;
+    private float fullStaminaDurationMultiplier = 1f;
+    [SerializeField] private float emptyStaminaDurationMultiplier = 2f;
 
     private float currentStamina;
     private Camera mainCamera;
@@ -125,6 +127,10 @@ public class WeaponController : MonoBehaviour
     public float CurrentStamina => currentStamina;
 
     public bool HasStaminaForSlash => currentStamina >= slashStaminaCost;
+
+    private float NormalizedStamina => maxStamina > Mathf.Epsilon ? Mathf.Clamp01(currentStamina / maxStamina) : 0f;
+
+    private float StaminaDurationMultiplier => Mathf.Lerp(emptyStaminaDurationMultiplier, fullStaminaDurationMultiplier, NormalizedStamina);
 
     private void RecoverStamina()
     {
@@ -334,7 +340,7 @@ public class WeaponController : MonoBehaviour
         slashSpeed = 0f;
         slashTween?.Kill();
         slashTween = weaponObject
-            .DOMove(weaponTarget.position, slashDuration)
+            .DOMove(weaponTarget.position, slashDuration * StaminaDurationMultiplier)
             .SetEase(slashEaseType)
             .OnComplete(() =>
             {
@@ -474,7 +480,7 @@ public class WeaponController : MonoBehaviour
 
         isBouncingBack = true;
         slashTween = weaponObject
-            .DOMove(bounceTarget, bounceBackDuration)
+            .DOMove(bounceTarget, bounceBackDuration * StaminaDurationMultiplier)
             .SetEase(bounceBackEaseType)
             .OnComplete(() =>
             {

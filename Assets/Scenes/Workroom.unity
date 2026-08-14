@@ -269,7 +269,7 @@ MonoBehaviour:
   maxDistanceY: 10
   playerHeart: {fileID: 887984960}
   minSlashInterval: 2
-  maxSlashInterval: 2
+  maxSlashInterval: 3
   windupTime: 0.5
   windupHoldTime: 0.3
   windupEaseType: 9
@@ -311,8 +311,9 @@ MonoBehaviour:
   minBlockLength: 1
   maxStamina: 100
   slashStaminaCost: 25
-  staminaRecoveryRate: 10
+  staminaRecoveryRate: 20
   staminaBar: {fileID: 262525976}
+  emptyStaminaDurationMultiplier: 2
 --- !u!23 &60872334
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2479,8 +2480,9 @@ MonoBehaviour:
   minBlockLength: 1
   maxStamina: 100
   slashStaminaCost: 25
-  staminaRecoveryRate: 10
+  staminaRecoveryRate: 20
   staminaBar: {fileID: 1166155024}
+  emptyStaminaDurationMultiplier: 2
 --- !u!23 &1611238763
 MeshRenderer:
   m_ObjectHideFlags: 0
