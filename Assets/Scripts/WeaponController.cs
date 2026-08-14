@@ -29,6 +29,7 @@ public class WeaponController : MonoBehaviour
 
     [Header("Block Object")]
     [SerializeField] private Transform blockObject;
+    [SerializeField] private LineRenderer blockLineRenderer;
     [SerializeField] private float blockObjectThickness = 0.2f;
     [SerializeField] private float minBlockLength = 0.1f;
 
@@ -38,6 +39,7 @@ public class WeaponController : MonoBehaviour
     private bool isBouncingBack;
     private bool isBlocking;
     private Vector3 blockStartPosition;
+    private Vector3 blockEndPosition;
     private Vector3 slashStartPosition;
     private Vector3 slashDirection;
     private Vector3 previousWeaponPosition;
@@ -68,6 +70,12 @@ public class WeaponController : MonoBehaviour
         {
             slashLineRenderer.positionCount = 2;
             slashLineRenderer.enabled = false;
+        }
+
+        if (blockLineRenderer != null)
+        {
+            blockLineRenderer.positionCount = 2;
+            blockLineRenderer.enabled = false;
         }
 
         if (weaponObject != null)
@@ -101,6 +109,26 @@ public class WeaponController : MonoBehaviour
         }
 
         UpdateSlashLine();
+        UpdateBlockLine();
+    }
+
+    private void UpdateBlockLine()
+    {
+        if (blockLineRenderer == null)
+        {
+            return;
+        }
+
+        if (!isBlocking)
+        {
+            blockLineRenderer.enabled = false;
+            return;
+        }
+
+        blockLineRenderer.enabled = true;
+        blockLineRenderer.positionCount = 2;
+        blockLineRenderer.SetPosition(0, blockStartPosition);
+        blockLineRenderer.SetPosition(1, blockEndPosition);
     }
 
     private void UpdateSlashLine()
@@ -284,25 +312,34 @@ public class WeaponController : MonoBehaviour
     // Block object is scaled along its local X, so its pivot must sit at the end that stays on the drag start point.
     private void UpdateBlockObject(Vector3 pointerPosition)
     {
-        if (blockObject == null)
-        {
-            return;
-        }
-
         if (Input.GetMouseButtonDown(1))
         {
             isBlocking = true;
             blockStartPosition = pointerPosition;
-            blockObject.gameObject.SetActive(true);
+            blockEndPosition = pointerPosition;
+            if (blockObject != null)
+            {
+                blockObject.gameObject.SetActive(true);
+            }
         }
 
         if (Input.GetMouseButtonUp(1))
         {
             isBlocking = false;
-            blockObject.gameObject.SetActive(false);
+            if (blockObject != null)
+            {
+                blockObject.gameObject.SetActive(false);
+            }
         }
 
         if (!isBlocking)
+        {
+            return;
+        }
+
+        blockEndPosition = pointerPosition;
+
+        if (blockObject == null)
         {
             return;
         }
