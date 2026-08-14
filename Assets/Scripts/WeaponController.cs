@@ -13,6 +13,7 @@ public class WeaponController : MonoBehaviour
     [Header("Slash")]
     [SerializeField] private Transform weaponObject;
     [SerializeField] private LineRenderer slashLineRenderer;
+    [SerializeField] private TrailRenderer slashTrailRenderer;
     [SerializeField] private float slashDuration = 0.5f;
     [SerializeField] private Ease slashEaseType = Ease.OutSine;
 
@@ -204,6 +205,11 @@ public class WeaponController : MonoBehaviour
         slashStartPosition = startPosition;
         weaponObject.position = startPosition;
         weaponObject.gameObject.SetActive(true);
+
+        if (slashTrailRenderer != null)
+        {
+            slashTrailRenderer.Clear();
+        }
 
         if (weaponTarget != null)
         {
