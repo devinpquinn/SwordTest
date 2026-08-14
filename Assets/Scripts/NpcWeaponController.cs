@@ -75,15 +75,17 @@ public class NpcWeaponController : MonoBehaviour
         }
 
         Vector3 center = playCenter != null ? playCenter.position : transform.position;
-        Vector3 aimPoint = playerHeart != null ? playerHeart.position : center;
+        Vector3 aimPoint = ClampToBounds(playerHeart != null ? playerHeart.position : center, center);
         float angle = Random.Range(0f, Mathf.PI * 2f);
         Vector3 axis = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
 
-        Vector3 startPoint = ClampToBounds(aimPoint + axis * Random.Range(minSlashReach, maxSlashReach), center);
-        pendingStartPoint = startPoint;
-        pendingEndPoint = ClampToBounds(aimPoint - axis * Random.Range(minSlashReach, maxSlashReach), center);
+        float forwardReach = Mathf.Min(Random.Range(minSlashReach, maxSlashReach), MaxReach(aimPoint, axis, center));
+        float backwardReach = Mathf.Min(Random.Range(minSlashReach, maxSlashReach), MaxReach(aimPoint, -axis, center));
 
-        weaponController.BeginSlashCharge(startPoint);
+        pendingStartPoint = aimPoint + axis * forwardReach;
+        pendingEndPoint = aimPoint - axis * backwardReach;
+
+        weaponController.BeginSlashCharge(pendingStartPoint);
         isWindingUp = true;
         windupStartTime = Time.time;
     }
@@ -99,5 +101,25 @@ public class NpcWeaponController : MonoBehaviour
             Mathf.Clamp(point.x, center.x - maxDistanceX, center.x + maxDistanceX),
             Mathf.Clamp(point.y, center.y - maxDistanceY, center.y + maxDistanceY),
             center.z);
+    }
+
+    // Slab test: how far we can travel from origin along direction before leaving the play bounds.
+    private float MaxReach(Vector3 origin, Vector3 direction, Vector3 center)
+    {
+        float limit = Mathf.Min(
+            AxisReach(origin.x - center.x, direction.x, maxDistanceX),
+            AxisReach(origin.y - center.y, direction.y, maxDistanceY));
+
+        return Mathf.Max(limit, 0f);
+    }
+
+    private static float AxisReach(float offset, float direction, float halfExtent)
+    {
+        if (Mathf.Abs(direction) <= Mathf.Epsilon)
+        {
+            return float.MaxValue;
+        }
+
+        return ((direction > 0f ? halfExtent : -halfExtent) - offset) / direction;
     }
 }

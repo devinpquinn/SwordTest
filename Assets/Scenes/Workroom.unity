@@ -265,8 +265,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcWeaponController
   playCenter: {fileID: 1795179259}
-  maxDistanceX: 10
-  maxDistanceY: 20
+  maxDistanceX: 20
+  maxDistanceY: 10
   playerHeart: {fileID: 887984960}
   minSlashInterval: 2
   maxSlashInterval: 2
