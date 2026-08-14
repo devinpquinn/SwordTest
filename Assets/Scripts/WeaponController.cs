@@ -36,6 +36,8 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float maxStamina = 100f;
     [SerializeField] private float slashStaminaCost = 25f;
     [SerializeField] private float staminaRecoveryRate = 20f;
+    [SerializeField] private float windupStaminaRecoveryMult = 0.25f;
+    [SerializeField] private float blockStaminaRecoveryMult = 0.5f;
     [SerializeField] private Image staminaBar;
     private float fullStaminaDurationMultiplier = 1f;
     [SerializeField] private float emptyStaminaDurationMultiplier = 2f;
@@ -134,12 +136,23 @@ public class WeaponController : MonoBehaviour
 
     private void RecoverStamina()
     {
-        if (IsBusy || isBlocking || currentStamina >= maxStamina)
+        if (isExecutingSlash || isBouncingBack || currentStamina >= maxStamina)
         {
             return;
         }
 
-        currentStamina = Mathf.Min(currentStamina + staminaRecoveryRate * Time.deltaTime, maxStamina);
+        float recoveryMultiplier = 1f;
+        if (isChargingSlash)
+        {
+            recoveryMultiplier *= windupStaminaRecoveryMult;
+        }
+
+        if (isBlocking)
+        {
+            recoveryMultiplier *= blockStaminaRecoveryMult;
+        }
+
+        currentStamina = Mathf.Min(currentStamina + staminaRecoveryRate * recoveryMultiplier * Time.deltaTime, maxStamina);
         UpdateStaminaBar();
     }
 
