@@ -128,7 +128,7 @@ public class WeaponController : MonoBehaviour
 
     private void RecoverStamina()
     {
-        if (currentStamina >= maxStamina)
+        if (IsBusy || isBlocking || currentStamina >= maxStamina)
         {
             return;
         }
