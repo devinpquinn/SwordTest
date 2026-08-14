@@ -294,7 +294,7 @@ MonoBehaviour:
   slashLineRenderer: {fileID: 60872337}
   slashTrailRenderer: {fileID: 1306503456}
   slashDuration: 0.3
-  slashEaseType: 27
+  slashEaseType: 28
   blockLayers:
     serializedVersion: 2
     m_Bits: 128
@@ -2462,12 +2462,12 @@ MonoBehaviour:
   weaponObject: {fileID: 710469881}
   slashLineRenderer: {fileID: 1611238766}
   slashTrailRenderer: {fileID: 710469888}
-  slashDuration: 0.2
-  slashEaseType: 27
+  slashDuration: 0.3
+  slashEaseType: 28
   blockLayers:
     serializedVersion: 2
     m_Bits: 128
-  bounceBackDuration: 0.25
+  bounceBackDuration: 0.3
   minBounceBackDistance: 1
   maxBounceBackDistance: 5
   minBounceBackSpeed: 135
