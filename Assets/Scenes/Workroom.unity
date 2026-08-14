@@ -312,8 +312,10 @@ MonoBehaviour:
   maxStamina: 100
   slashStaminaCost: 25
   staminaRecoveryRate: 20
+  windupStaminaRecoveryMult: 0.25
+  blockStaminaRecoveryMult: 0.5
   staminaBar: {fileID: 262525976}
-  emptyStaminaDurationMultiplier: 2
+  emptyStaminaDurationMultiplier: 3
 --- !u!23 &60872334
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2481,8 +2483,10 @@ MonoBehaviour:
   maxStamina: 100
   slashStaminaCost: 25
   staminaRecoveryRate: 20
+  windupStaminaRecoveryMult: 0.25
+  blockStaminaRecoveryMult: 0.5
   staminaBar: {fileID: 1166155024}
-  emptyStaminaDurationMultiplier: 2
+  emptyStaminaDurationMultiplier: 3
 --- !u!23 &1611238763
 MeshRenderer:
   m_ObjectHideFlags: 0

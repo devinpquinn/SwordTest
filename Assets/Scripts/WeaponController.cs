@@ -76,6 +76,13 @@ public class WeaponController : MonoBehaviour
 
         if (blockObject != null)
         {
+            BlockOwnerRelay owner = blockObject.GetComponent<BlockOwnerRelay>();
+            if (owner == null)
+            {
+                owner = blockObject.gameObject.AddComponent<BlockOwnerRelay>();
+            }
+
+            owner.Initialize(this);
             blockObject.gameObject.SetActive(false);
         }
 
@@ -381,11 +388,7 @@ public class WeaponController : MonoBehaviour
 
         if (Input.GetMouseButtonUp(1))
         {
-            isBlocking = false;
-            if (blockObject != null)
-            {
-                blockObject.gameObject.SetActive(false);
-            }
+            EndBlock();
         }
 
         if (!isBlocking)
@@ -409,6 +412,22 @@ public class WeaponController : MonoBehaviour
         }
 
         blockObject.localScale = new Vector3(Mathf.Max(delta.magnitude, minBlockLength), blockObjectThickness, blockObjectThickness);
+    }
+
+    public void EndBlock()
+    {
+        if (!isBlocking)
+        {
+            return;
+        }
+
+        isBlocking = false;
+        if (blockObject != null)
+        {
+            blockObject.gameObject.SetActive(false);
+        }
+
+        UpdateBlockLine();
     }
 
     // Tween-driven motion teleports the transform, so sweep between frames to catch blockers the collider skipped over.
@@ -478,6 +497,12 @@ public class WeaponController : MonoBehaviour
         if (blocker == null || (blockLayers.value & (1 << blocker.layer)) == 0)
         {
             return;
+        }
+
+        WeaponController blockerOwner = blocker.GetComponentInParent<BlockOwnerRelay>()?.Owner;
+        if (blockerOwner != null)
+        {
+            blockerOwner.EndBlock();
         }
 
         slashTween?.Kill();
@@ -551,5 +576,16 @@ public class WeaponBlockRelay : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         onBlocked?.Invoke(other.gameObject);
+    }
+}
+
+// The block object lives outside the weapon's hierarchy, so it carries a back-reference to its owner.
+public class BlockOwnerRelay : MonoBehaviour
+{
+    internal WeaponController Owner { get; private set; }
+
+    internal void Initialize(WeaponController owner)
+    {
+        Owner = owner;
     }
 }
