@@ -268,13 +268,21 @@ MonoBehaviour:
   maxDistanceX: 20
   maxDistanceY: 10
   playerHeart: {fileID: 887984960}
+  npcHeart: {fileID: 1006528177}
+  playerWeapon: {fileID: 1611238761}
   minSlashInterval: 2
   maxSlashInterval: 3
   windupTime: 0.5
   windupHoldTime: 0.3
   windupEaseType: 9
-  minSlashReach: 8
-  maxSlashReach: 16
+  minSlashLength: 8
+  maxSlashLength: 16
+  minBlockReactionTime: 0.2
+  maxBlockReactionTime: 0.5
+  blockCreateTime: 0.5
+  blockEaseType: 9
+  minBlockLength: 8
+  maxBlockLength: 16
 --- !u!114 &60872333
 MonoBehaviour:
   m_ObjectHideFlags: 0

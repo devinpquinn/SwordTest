@@ -11,6 +11,8 @@ public class NpcWeaponController : MonoBehaviour
 
     [Header("Targeting")]
     [SerializeField] private Transform playerHeart;
+    [SerializeField] private Transform npcHeart;
+    [SerializeField] private WeaponController playerWeapon;
 
     [Header("Behavior")]
     [SerializeField] private float minSlashInterval = 2f;
@@ -19,9 +21,17 @@ public class NpcWeaponController : MonoBehaviour
     [Header("Slash")]
     [SerializeField] private float windupTime = 0.6f;
     [SerializeField] private float windupHoldTime = 0.2f;
-    [SerializeField] private Ease windupEaseType = Ease.OutSine;
-    [SerializeField] private float minSlashReach = 3f;
-    [SerializeField] private float maxSlashReach = 8f;
+    [SerializeField] private Ease windupEaseType = Ease.OutCubic;
+    [SerializeField] private float minSlashLength = 8f;
+    [SerializeField] private float maxSlashLength = 16f;
+    
+    [Header("Block")]
+    [SerializeField] private float minBlockReactionTime = 0.2f;
+    [SerializeField] private float maxBlockReactionTime = 1f;
+    [SerializeField] private float blockCreateTime = 0.5f;
+    [SerializeField] private Ease blockEaseType = Ease.OutCubic;
+    [SerializeField] private float minBlockLength = 6f;
+    [SerializeField] private float maxBlockLength = 12f;
 
     private WeaponController weaponController;
     private float nextSlashTime;
@@ -29,6 +39,21 @@ public class NpcWeaponController : MonoBehaviour
     private float windupStartTime;
     private Vector3 pendingStartPoint;
     private Vector3 pendingEndPoint;
+
+    private enum DefenseState
+    {
+        None,
+        Reacting,
+        Creating,
+        Holding,
+        Releasing
+    }
+
+    private DefenseState defenseState;
+    private float defenseActionTime;
+    private float blockCreateStartTime;
+    private Vector3 blockStartPoint;
+    private Vector3 blockEndPoint;
 
     private void Awake()
     {
@@ -45,10 +70,16 @@ public class NpcWeaponController : MonoBehaviour
     {
         weaponController.SlashFinished -= ScheduleNextSlash;
         isWindingUp = false;
+        defenseState = DefenseState.None;
     }
 
     private void Update()
     {
+        if (UpdateDefense())
+        {
+            return;
+        }
+
         if (isWindingUp)
         {
             float windupProgress = windupTime > Mathf.Epsilon
@@ -79,8 +110,8 @@ public class NpcWeaponController : MonoBehaviour
         float angle = Random.Range(0f, Mathf.PI * 2f);
         Vector3 axis = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
 
-        float forwardReach = Mathf.Min(Random.Range(minSlashReach, maxSlashReach), MaxReach(aimPoint, axis, center));
-        float backwardReach = Mathf.Min(Random.Range(minSlashReach, maxSlashReach), MaxReach(aimPoint, -axis, center));
+        float forwardReach = Mathf.Min(Random.Range(minSlashLength, maxSlashLength), MaxReach(aimPoint, axis, center));
+        float backwardReach = Mathf.Min(Random.Range(minSlashLength, maxSlashLength), MaxReach(aimPoint, -axis, center));
 
         pendingStartPoint = aimPoint + axis * forwardReach;
         pendingEndPoint = aimPoint - axis * backwardReach;
@@ -93,6 +124,117 @@ public class NpcWeaponController : MonoBehaviour
     private void ScheduleNextSlash()
     {
         nextSlashTime = Time.time + Random.Range(minSlashInterval, maxSlashInterval);
+    }
+
+    // Returns true while the NPC is committed to defending, which suspends its attack routine.
+    private bool UpdateDefense()
+    {
+        if (playerWeapon == null)
+        {
+            return false;
+        }
+
+        bool playerCharging = playerWeapon.IsChargingSlash;
+        bool playerAttackOver = !playerCharging && !playerWeapon.IsBusy;
+
+        switch (defenseState)
+        {
+            case DefenseState.None:
+                if (playerCharging && !isWindingUp && !weaponController.IsBusy && !weaponController.IsBlocking)
+                {
+                    defenseState = DefenseState.Reacting;
+                    defenseActionTime = Time.time + Random.Range(minBlockReactionTime, maxBlockReactionTime);
+                    return true;
+                }
+
+                return false;
+
+            case DefenseState.Reacting:
+                if (playerAttackOver)
+                {
+                    EndDefense();
+                    return false;
+                }
+
+                if (Time.time >= defenseActionTime)
+                {
+                    StartBlockCreation();
+                }
+
+                return true;
+
+            case DefenseState.Creating:
+            case DefenseState.Holding:
+                if (!weaponController.IsBlocking)
+                {
+                    EndDefense();
+                    return false;
+                }
+
+                if (defenseState == DefenseState.Creating)
+                {
+                    float progress = blockCreateTime > Mathf.Epsilon
+                        ? Mathf.Clamp01((Time.time - blockCreateStartTime) / blockCreateTime)
+                        : 1f;
+
+                    weaponController.UpdateBlockDrag(Vector3.LerpUnclamped(
+                        blockStartPoint,
+                        blockEndPoint,
+                        DOVirtual.EasedValue(0f, 1f, progress, blockEaseType)));
+
+                    if (progress >= 1f)
+                    {
+                        defenseState = DefenseState.Holding;
+                    }
+                }
+
+                if (playerAttackOver)
+                {
+                    defenseState = DefenseState.Releasing;
+                    defenseActionTime = Time.time + Random.Range(minBlockReactionTime, maxBlockReactionTime);
+                }
+
+                return true;
+
+            case DefenseState.Releasing:
+                if (!weaponController.IsBlocking || Time.time >= defenseActionTime)
+                {
+                    weaponController.EndBlock();
+                    EndDefense();
+                    return false;
+                }
+
+                return true;
+        }
+
+        return false;
+    }
+
+    private void StartBlockCreation()
+    {
+        Vector3 origin = playerWeapon.SlashStartPosition;
+        Vector3 target = npcHeart != null ? npcHeart.position : transform.position;
+        Vector3 incoming = target - origin;
+        Vector3 perpendicular = incoming.sqrMagnitude > Mathf.Epsilon
+            ? new Vector3(-incoming.y, incoming.x, 0f).normalized
+            : Vector3.up;
+
+        Vector3 midpoint = (origin + target) * 0.5f;
+        midpoint.z = target.z;
+        float halfLength = Random.Range(minBlockLength, maxBlockLength) * 0.5f;
+
+        blockStartPoint = midpoint + perpendicular * halfLength;
+        blockEndPoint = midpoint - perpendicular * halfLength;
+
+        weaponController.BeginBlock(blockStartPoint);
+        blockCreateStartTime = Time.time;
+        defenseState = DefenseState.Creating;
+    }
+
+    private void EndDefense()
+    {
+        defenseState = DefenseState.None;
+        ScheduleNextSlash();
     }
 
     private Vector3 ClampToBounds(Vector3 point, Vector3 center)

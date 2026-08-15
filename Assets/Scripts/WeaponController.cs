@@ -250,6 +250,12 @@ public class WeaponController : MonoBehaviour
 
     public bool IsBusy => isChargingSlash || isExecutingSlash || isBouncingBack;
 
+    public bool IsChargingSlash => isChargingSlash;
+
+    public bool IsBlocking => isBlocking;
+
+    public Vector3 SlashStartPosition => slashStartPosition;
+
     public event System.Action SlashFinished;
 
     public void MoveTargetTowards(Vector3 position)
@@ -372,18 +378,11 @@ public class WeaponController : MonoBehaviour
             });
     }
 
-    // Block object is scaled along its local X, so its pivot must sit at the end that stays on the drag start point.
     private void UpdateBlockObject(Vector3 pointerPosition)
     {
         if (Input.GetMouseButtonDown(1))
         {
-            isBlocking = true;
-            blockStartPosition = pointerPosition;
-            blockEndPosition = pointerPosition;
-            if (blockObject != null)
-            {
-                blockObject.gameObject.SetActive(true);
-            }
+            BeginBlock(pointerPosition);
         }
 
         if (Input.GetMouseButtonUp(1))
@@ -391,6 +390,26 @@ public class WeaponController : MonoBehaviour
             EndBlock();
         }
 
+        UpdateBlockDrag(pointerPosition);
+    }
+
+    public void BeginBlock(Vector3 startPosition)
+    {
+        isBlocking = true;
+        blockStartPosition = startPosition;
+        blockEndPosition = startPosition;
+
+        if (blockObject != null)
+        {
+            blockObject.position = startPosition;
+            blockObject.localScale = new Vector3(minBlockLength, blockObjectThickness, blockObjectThickness);
+            blockObject.gameObject.SetActive(true);
+        }
+    }
+
+    // Block object is scaled along its local X, so its pivot must sit at the end that stays on the drag start point.
+    public void UpdateBlockDrag(Vector3 pointerPosition)
+    {
         if (!isBlocking)
         {
             return;
