@@ -28,6 +28,8 @@ public class NpcWeaponController : MonoBehaviour
     [Header("Block")]
     [SerializeField] private float minBlockReactionTime = 0.2f;
     [SerializeField] private float maxBlockReactionTime = 1f;
+    [SerializeField] private float minBlockIntercept = 0.3f;
+    [SerializeField] private float maxBlockIntercept = 0.7f;
     [SerializeField] private float blockCreateTime = 0.5f;
     [SerializeField] private Ease blockEaseType = Ease.OutCubic;
     [SerializeField] private float minBlockLength = 6f;
@@ -219,12 +221,12 @@ public class NpcWeaponController : MonoBehaviour
             ? new Vector3(-incoming.y, incoming.x, 0f).normalized
             : Vector3.up;
 
-        Vector3 midpoint = (origin + target) * 0.5f;
-        midpoint.z = target.z;
+        Vector3 interceptPoint = Vector3.LerpUnclamped(origin, target, Random.Range(minBlockIntercept, maxBlockIntercept));
+        interceptPoint.z = target.z;
         float halfLength = Random.Range(minBlockLength, maxBlockLength) * 0.5f;
 
-        blockStartPoint = midpoint + perpendicular * halfLength;
-        blockEndPoint = midpoint - perpendicular * halfLength;
+        blockStartPoint = interceptPoint + perpendicular * halfLength;
+        blockEndPoint = interceptPoint - perpendicular * halfLength;
 
         weaponController.BeginBlock(blockStartPoint);
         blockCreateStartTime = Time.time;
