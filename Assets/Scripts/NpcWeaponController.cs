@@ -29,7 +29,10 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private float minBlockReactionTime = 0.2f;
     [SerializeField] private float maxBlockReactionTime = 1f;
     [SerializeField] private float minBlockIntercept = 0.3f;
-    [SerializeField] private float maxBlockIntercept = 0.7f;
+    [SerializeField] private float maxBlockIntercept = 0.7f;   
+    [SerializeField] private float minBlockCentered = 0.4f;
+    [SerializeField] private float maxBlockCentered = 0.6f;
+    [SerializeField] private float maxBlockAngleVariance = 20f;
     [SerializeField] private float blockCreateTime = 0.5f;
     [SerializeField] private Ease blockEaseType = Ease.OutCubic;
     [SerializeField] private float minBlockLength = 6f;
@@ -221,12 +224,20 @@ public class NpcWeaponController : MonoBehaviour
             ? new Vector3(-incoming.y, incoming.x, 0f).normalized
             : Vector3.up;
 
-        Vector3 interceptPoint = Vector3.LerpUnclamped(origin, target, Random.Range(minBlockIntercept, maxBlockIntercept));
-        interceptPoint.z = target.z;
-        float halfLength = Random.Range(minBlockLength, maxBlockLength) * 0.5f;
+        perpendicular = Quaternion.Euler(0f, 0f, Random.Range(-maxBlockAngleVariance, maxBlockAngleVariance)) * perpendicular;
 
-        blockStartPoint = interceptPoint + perpendicular * halfLength;
-        blockEndPoint = interceptPoint - perpendicular * halfLength;
+        Vector3 center = playCenter != null ? playCenter.position : transform.position;
+        Vector3 interceptPoint = ClampToBounds(
+            Vector3.LerpUnclamped(origin, target, Random.Range(minBlockIntercept, maxBlockIntercept)),
+            center);
+        float length = Random.Range(minBlockLength, maxBlockLength);
+        // Fraction of the block that sits on the start side of the intercept point; 0.5 centers it.
+        float centeredFraction = Random.Range(minBlockCentered, maxBlockCentered);
+        float startReach = length * centeredFraction;
+        float endReach = length - startReach;
+
+        blockStartPoint = interceptPoint + perpendicular * Mathf.Min(startReach, MaxReach(interceptPoint, perpendicular, center));
+        blockEndPoint = interceptPoint - perpendicular * Mathf.Min(endReach, MaxReach(interceptPoint, -perpendicular, center));
 
         weaponController.BeginBlock(blockStartPoint);
         blockCreateStartTime = Time.time;
