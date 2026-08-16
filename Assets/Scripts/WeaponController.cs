@@ -60,6 +60,7 @@ public class WeaponController : MonoBehaviour
     private float maxSlashSpeed;
     private float slashTravelDistance;
     private bool hasHitHeartThisSlash;
+    private bool isMovingBackward;
     private Tween slashTween;
     private readonly RaycastHit[] sweepHits = new RaycastHit[8];
 
@@ -373,6 +374,7 @@ public class WeaponController : MonoBehaviour
         maxSlashSpeed = 0f;
         slashTravelDistance = 0f;
         hasHitHeartThisSlash = false;
+        isMovingBackward = false;
         slashTween?.Kill();
         slashTween = weaponObject
             .DOMove(weaponTarget.position, slashDuration * StaminaDurationMultiplier)
@@ -487,6 +489,7 @@ public class WeaponController : MonoBehaviour
         slashSpeed = Time.deltaTime > Mathf.Epsilon ? distance / Time.deltaTime : 0f;
         maxSlashSpeed = Mathf.Max(maxSlashSpeed, slashSpeed);
         slashTravelDistance += distance;
+        isMovingBackward = Vector3.Dot(delta, slashDirection) < 0f;
 
         int hitCount = Physics.SphereCastNonAlloc(
             startPosition,
@@ -521,9 +524,36 @@ public class WeaponController : MonoBehaviour
 
         slashTravelDistance -= distance - closestDistance;
         CheckHeartHit(startPosition, delta / distance, closestDistance);
+
+        // Easing can drag the weapon backwards past a block; that contact shatters the block instead of stopping the slash.
+        if (isMovingBackward)
+        {
+            slashTravelDistance += distance - closestDistance;
+            BreakBlock(sweepHits[closestIndex].collider.gameObject);
+            return;
+        }
+
         weaponObject.position = startPosition + delta.normalized * closestDistance;
         previousWeaponPosition = weaponObject.position;
         NotifyBlocked(sweepHits[closestIndex].collider.gameObject);
+    }
+
+    private void BreakBlock(GameObject blocker)
+    {
+        if (blocker == null)
+        {
+            return;
+        }
+
+        WeaponController blockerOwner = blocker.GetComponentInParent<BlockOwnerRelay>()?.Owner;
+        if (blockerOwner != null)
+        {
+            blockerOwner.EndBlock();
+        }
+        else
+        {
+            blocker.SetActive(false);
+        }
     }
 
     private void CheckHeartHit(Vector3 startPosition, Vector3 direction, float distance)
@@ -564,6 +594,12 @@ public class WeaponController : MonoBehaviour
 
         if (blocker == null || (blockLayers.value & (1 << blocker.layer)) == 0)
         {
+            return;
+        }
+
+        if (isMovingBackward)
+        {
+            BreakBlock(blocker);
             return;
         }
 
