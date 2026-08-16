@@ -326,6 +326,7 @@ MonoBehaviour:
   heartLayers:
     serializedVersion: 2
     m_Bits: 256
+  minHeartHitSpeed: 100
   heartObject: {fileID: 1006528177}
   heartBoundsCenter: {fileID: 1795179259}
   heartMaxDistanceX: 18
@@ -2508,6 +2509,7 @@ MonoBehaviour:
   heartLayers:
     serializedVersion: 2
     m_Bits: 512
+  minHeartHitSpeed: 100
   heartObject: {fileID: 887984960}
   heartBoundsCenter: {fileID: 1795179259}
   heartMaxDistanceX: 18

@@ -28,6 +28,7 @@ public class WeaponController : MonoBehaviour
 
     [Header("Hit")]
     [SerializeField] private LayerMask heartLayers;
+    [SerializeField] private float minHeartHitSpeed = 10f;
 
     [Header("Heart Movement")]
     [SerializeField] private Transform heartObject;
@@ -572,19 +573,24 @@ public class WeaponController : MonoBehaviour
         }
 
         slashTravelDistance -= distance - closestDistance;
-        CheckHeartHit(startPosition, delta / distance, closestDistance);
+        // Cached because the heart sweep reuses the shared hit buffer.
+        GameObject blocker = sweepHits[closestIndex].collider.gameObject;
+        if (CheckHeartHit(startPosition, delta / distance, closestDistance))
+        {
+            return;
+        }
 
         // Easing can drag the weapon backwards past a block; that contact shatters the block instead of stopping the slash.
         if (isMovingBackward)
         {
             slashTravelDistance += distance - closestDistance;
-            BreakBlock(sweepHits[closestIndex].collider.gameObject);
+            BreakBlock(blocker);
             return;
         }
 
         weaponObject.position = startPosition + delta.normalized * closestDistance;
         previousWeaponPosition = weaponObject.position;
-        NotifyBlocked(sweepHits[closestIndex].collider.gameObject);
+        NotifyBlocked(blocker);
     }
 
     private void BreakBlock(GameObject blocker)
@@ -605,11 +611,12 @@ public class WeaponController : MonoBehaviour
         }
     }
 
-    private void CheckHeartHit(Vector3 startPosition, Vector3 direction, float distance)
+    // Returns true when a too-slow contact bounced the weapon off the heart instead of scoring a hit.
+    private bool CheckHeartHit(Vector3 startPosition, Vector3 direction, float distance)
     {
         if (hasHitHeartThisSlash || heartLayers.value == 0 || distance <= Mathf.Epsilon)
         {
-            return;
+            return false;
         }
 
         int hitCount = Physics.SphereCastNonAlloc(
@@ -621,6 +628,8 @@ public class WeaponController : MonoBehaviour
             heartLayers,
             QueryTriggerInteraction.Collide);
 
+        int closestIndex = -1;
+        float closestDistance = float.MaxValue;
         for (int i = 0; i < hitCount; i++)
         {
             if (sweepHits[i].collider.transform.IsChildOf(weaponObject))
@@ -628,10 +637,30 @@ public class WeaponController : MonoBehaviour
                 continue;
             }
 
-            hasHitHeartThisSlash = true;
-            Debug.Log($"{name} hit heart {sweepHits[i].collider.name} at {slashSpeed:F2} units/sec");
-            return;
+            if (sweepHits[i].distance < closestDistance)
+            {
+                closestDistance = sweepHits[i].distance;
+                closestIndex = i;
+            }
         }
+
+        if (closestIndex < 0)
+        {
+            return false;
+        }
+
+        if (slashSpeed < minHeartHitSpeed && !isMovingBackward)
+        {
+            slashTravelDistance -= distance - closestDistance;
+            weaponObject.position = startPosition + direction * closestDistance;
+            previousWeaponPosition = weaponObject.position;
+            BounceBack();
+            return true;
+        }
+
+        hasHitHeartThisSlash = true;
+        Debug.Log($"{name} hit heart {sweepHits[closestIndex].collider.name} at {slashSpeed:F2} units/sec");
+        return false;
     }
 
     internal void NotifyBlocked(GameObject blocker)
@@ -658,6 +687,11 @@ public class WeaponController : MonoBehaviour
             blockerOwner.EndBlock();
         }
 
+        BounceBack();
+    }
+
+    private void BounceBack()
+    {
         slashTween?.Kill();
         slashTween = null;
         isExecutingSlash = false;
