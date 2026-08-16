@@ -35,6 +35,7 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float heartMaxDistanceX = 5f;
     [SerializeField] private float heartMaxDistanceY = 3f;
     [SerializeField] private float heartMoveSpeed = 6f;
+    [SerializeField] private float minHeartMoveSpeedMult = 0.5f;
     [SerializeField] private float heartSmoothTime = 0.1f;
 
     [Header("Block Object")]
@@ -212,13 +213,14 @@ public class WeaponController : MonoBehaviour
 
         isMoving = input.sqrMagnitude > Mathf.Epsilon;
 
-        Vector3 desiredPosition = heartObject.position + input * heartMoveSpeed * heartSmoothTime;
+        float moveSpeed = heartMoveSpeed * Mathf.Lerp(minHeartMoveSpeedMult, 1f, NormalizedStamina);
+        Vector3 desiredPosition = heartObject.position + input * moveSpeed * heartSmoothTime;
         Vector3 position = Vector3.SmoothDamp(
             heartObject.position,
             desiredPosition,
             ref heartVelocity,
             heartSmoothTime,
-            heartMoveSpeed);
+            moveSpeed);
 
         Vector3 center = heartBoundsCenter != null ? heartBoundsCenter.position : transform.position;
         heartObject.position = new Vector3(

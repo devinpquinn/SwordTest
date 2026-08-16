@@ -326,6 +326,7 @@ MonoBehaviour:
   heartMaxDistanceX: 18
   heartMaxDistanceY: 3
   heartMoveSpeed: 10
+  minHeartMoveSpeedMult: 0.3
   heartSmoothTime: 0.1
   blockObject: {fileID: 477005003}
   blockLineRenderer: {fileID: 477005004}
@@ -336,6 +337,7 @@ MonoBehaviour:
   staminaRecoveryRate: 20
   windupStaminaRecoveryMult: 0.25
   blockStaminaRecoveryMult: 0.5
+  movementStaminaRecoveryMult: 0.1
   staminaBar: {fileID: 262525976}
   emptyStaminaDurationMultiplier: 3
 --- !u!23 &60872334
@@ -2686,6 +2688,7 @@ MonoBehaviour:
   heartMaxDistanceX: 18
   heartMaxDistanceY: 3
   heartMoveSpeed: 10
+  minHeartMoveSpeedMult: 0.3
   heartSmoothTime: 0.1
   blockObject: {fileID: 1473459154}
   blockLineRenderer: {fileID: 1473459155}
@@ -2696,6 +2699,7 @@ MonoBehaviour:
   staminaRecoveryRate: 20
   windupStaminaRecoveryMult: 0.25
   blockStaminaRecoveryMult: 0.5
+  movementStaminaRecoveryMult: 0.1
   staminaBar: {fileID: 1166155024}
   emptyStaminaDurationMultiplier: 3
 --- !u!23 &1611238763
