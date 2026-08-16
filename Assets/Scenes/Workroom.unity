@@ -277,6 +277,8 @@ MonoBehaviour:
   windupEaseType: 9
   minSlashLength: 8
   maxSlashLength: 16
+  slashTrackingCheckFrequency: 0.1
+  slashTrackingSmoothTime: 0.1
   minBlockReactionTime: 0.2
   maxBlockReactionTime: 0.5
   minBlockIntercept: 0.3

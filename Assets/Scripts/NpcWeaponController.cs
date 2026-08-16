@@ -24,6 +24,8 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private Ease windupEaseType = Ease.OutCubic;
     [SerializeField] private float minSlashLength = 8f;
     [SerializeField] private float maxSlashLength = 16f;
+    [SerializeField] private float slashTrackingCheckFrequency = 0.5f;
+    [SerializeField] private float slashTrackingSmoothTime = 0.3f;
     
     [Header("Block")]
     [SerializeField] private float minBlockReactionTime = 0.2f;
@@ -44,6 +46,13 @@ public class NpcWeaponController : MonoBehaviour
     private float windupStartTime;
     private Vector3 pendingStartPoint;
     private Vector3 pendingEndPoint;
+    private Vector3 slashAxis;
+    private float slashForwardReach;
+    private float slashBackwardReach;
+    private Vector3 aimPoint;
+    private Vector3 trackedAimPoint;
+    private Vector3 aimVelocity;
+    private float nextTrackingCheckTime;
 
     private enum DefenseState
     {
@@ -87,6 +96,8 @@ public class NpcWeaponController : MonoBehaviour
 
         if (isWindingUp)
         {
+            UpdateSlashTracking();
+
             float windupProgress = windupTime > Mathf.Epsilon
                 ? Mathf.Clamp01((Time.time - windupStartTime) / windupTime)
                 : 1f;
@@ -111,19 +122,49 @@ public class NpcWeaponController : MonoBehaviour
         }
 
         Vector3 center = playCenter != null ? playCenter.position : transform.position;
-        Vector3 aimPoint = ClampToBounds(playerHeart != null ? playerHeart.position : center, center);
+        aimPoint = ClampToBounds(playerHeart != null ? playerHeart.position : center, center);
+        trackedAimPoint = aimPoint;
+        aimVelocity = Vector3.zero;
+        nextTrackingCheckTime = Time.time + Random.Range(0f, slashTrackingCheckFrequency);
+
         float angle = Random.Range(0f, Mathf.PI * 2f);
-        Vector3 axis = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
-
-        float forwardReach = Mathf.Min(Random.Range(minSlashLength, maxSlashLength), MaxReach(aimPoint, axis, center));
-        float backwardReach = Mathf.Min(Random.Range(minSlashLength, maxSlashLength), MaxReach(aimPoint, -axis, center));
-
-        pendingStartPoint = aimPoint + axis * forwardReach;
-        pendingEndPoint = aimPoint - axis * backwardReach;
+        slashAxis = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
+        slashForwardReach = Random.Range(minSlashLength, maxSlashLength);
+        slashBackwardReach = Random.Range(minSlashLength, maxSlashLength);
+        pendingStartPoint = aimPoint + slashAxis * Mathf.Min(slashForwardReach, MaxReach(aimPoint, slashAxis, center));
+        UpdateSlashEndPoint(center);
 
         weaponController.BeginSlashCharge(pendingStartPoint);
         isWindingUp = true;
         windupStartTime = Time.time;
+    }
+
+    // Aim only re-samples the heart on a randomized interval, so the NPC lags behind perfect tracking.
+    private void UpdateSlashTracking()
+    {
+        if (playerHeart == null)
+        {
+            return;
+        }
+
+        Vector3 center = playCenter != null ? playCenter.position : transform.position;
+
+        if (Time.time >= nextTrackingCheckTime)
+        {
+            trackedAimPoint = ClampToBounds(playerHeart.position, center);
+            nextTrackingCheckTime = Time.time + Random.Range(0f, slashTrackingCheckFrequency);
+        }
+
+        aimPoint = Vector3.SmoothDamp(aimPoint, trackedAimPoint, ref aimVelocity, slashTrackingSmoothTime);
+        UpdateSlashEndPoint(center);
+    }
+
+    // The origin is locked in when the charge starts, so tracking only swings the end point through the aim point.
+    private void UpdateSlashEndPoint(Vector3 center)
+    {
+        Vector3 toAim = aimPoint - pendingStartPoint;
+        Vector3 direction = toAim.sqrMagnitude > Mathf.Epsilon ? toAim.normalized : -slashAxis;
+        pendingEndPoint = aimPoint + direction * Mathf.Min(slashBackwardReach, MaxReach(aimPoint, direction, center));
     }
 
     private void ScheduleNextSlash()
