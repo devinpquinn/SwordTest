@@ -26,6 +26,9 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private Ease bounceBackEaseType = Ease.OutQuad;
     [SerializeField] private float blockSweepRadius = 0.1f;
 
+    [Header("Hit")]
+    [SerializeField] private LayerMask heartLayers;
+
     [Header("Block Object")]
     [SerializeField] private Transform blockObject;
     [SerializeField] private LineRenderer blockLineRenderer;
@@ -56,6 +59,7 @@ public class WeaponController : MonoBehaviour
     private float slashSpeed;
     private float maxSlashSpeed;
     private float slashTravelDistance;
+    private bool hasHitHeartThisSlash;
     private Tween slashTween;
     private readonly RaycastHit[] sweepHits = new RaycastHit[8];
 
@@ -368,6 +372,7 @@ public class WeaponController : MonoBehaviour
         slashSpeed = 0f;
         maxSlashSpeed = 0f;
         slashTravelDistance = 0f;
+        hasHitHeartThisSlash = false;
         slashTween?.Kill();
         slashTween = weaponObject
             .DOMove(weaponTarget.position, slashDuration * StaminaDurationMultiplier)
@@ -510,13 +515,44 @@ public class WeaponController : MonoBehaviour
 
         if (closestIndex < 0)
         {
+            CheckHeartHit(startPosition, delta / distance, distance);
             return;
         }
 
         slashTravelDistance -= distance - closestDistance;
+        CheckHeartHit(startPosition, delta / distance, closestDistance);
         weaponObject.position = startPosition + delta.normalized * closestDistance;
         previousWeaponPosition = weaponObject.position;
         NotifyBlocked(sweepHits[closestIndex].collider.gameObject);
+    }
+
+    private void CheckHeartHit(Vector3 startPosition, Vector3 direction, float distance)
+    {
+        if (hasHitHeartThisSlash || heartLayers.value == 0 || distance <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        int hitCount = Physics.SphereCastNonAlloc(
+            startPosition,
+            Mathf.Max(blockSweepRadius, 0.001f),
+            direction,
+            sweepHits,
+            distance,
+            heartLayers,
+            QueryTriggerInteraction.Collide);
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            if (sweepHits[i].collider.transform.IsChildOf(weaponObject))
+            {
+                continue;
+            }
+
+            hasHitHeartThisSlash = true;
+            Debug.Log($"{name} hit heart {sweepHits[i].collider.name} at {slashSpeed:F2} units/sec");
+            return;
+        }
     }
 
     internal void NotifyBlocked(GameObject blocker)

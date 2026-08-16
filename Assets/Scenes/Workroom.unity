@@ -318,6 +318,9 @@ MonoBehaviour:
   maxBounceBackSpeed: 375
   bounceBackEaseType: 27
   blockSweepRadius: 0.5
+  heartLayers:
+    serializedVersion: 2
+    m_Bits: 256
   blockObject: {fileID: 477005003}
   blockLineRenderer: {fileID: 477005004}
   blockObjectThickness: 1
@@ -928,7 +931,7 @@ GameObject:
   m_Component:
   - component: {fileID: 477005003}
   - component: {fileID: 477005004}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: EnemyBlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1561,7 +1564,7 @@ GameObject:
   - component: {fileID: 887984963}
   - component: {fileID: 887984962}
   - component: {fileID: 887984961}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PlayerHeart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1785,7 +1788,7 @@ GameObject:
   - component: {fileID: 1006528176}
   - component: {fileID: 1006528175}
   - component: {fileID: 1006528174}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: EnemyHeart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2306,7 +2309,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1473459154}
   - component: {fileID: 1473459155}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: PlayerBlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2489,6 +2492,9 @@ MonoBehaviour:
   maxBounceBackSpeed: 375
   bounceBackEaseType: 27
   blockSweepRadius: 0.5
+  heartLayers:
+    serializedVersion: 2
+    m_Bits: 512
   blockObject: {fileID: 1473459154}
   blockLineRenderer: {fileID: 1473459155}
   blockObjectThickness: 1
