@@ -49,6 +49,7 @@ public class WeaponController : MonoBehaviour
     [SerializeField] private float staminaRecoveryRate = 20f;
     [SerializeField] private float windupStaminaRecoveryMult = 0.25f;
     [SerializeField] private float blockStaminaRecoveryMult = 0.5f;
+    [SerializeField] private float movementStaminaRecoveryMult = 0.1f;
     [SerializeField] private Image staminaBar;
     private float fullStaminaDurationMultiplier = 1f;
     [SerializeField] private float emptyStaminaDurationMultiplier = 2f;
@@ -69,6 +70,7 @@ public class WeaponController : MonoBehaviour
     private float slashTravelDistance;
     private bool hasHitHeartThisSlash;
     private bool isMovingBackward;
+    private bool isMoving;
     private Vector3 heartVelocity;
     private Tween slashTween;
     private readonly RaycastHit[] sweepHits = new RaycastHit[8];
@@ -176,6 +178,11 @@ public class WeaponController : MonoBehaviour
             recoveryMultiplier *= blockStaminaRecoveryMult;
         }
 
+        if (isMoving)
+        {
+            recoveryMultiplier *= movementStaminaRecoveryMult;
+        }
+
         currentStamina = Mathf.Min(currentStamina + staminaRecoveryRate * recoveryMultiplier * Time.deltaTime, maxStamina);
         UpdateStaminaBar();
     }
@@ -202,6 +209,8 @@ public class WeaponController : MonoBehaviour
         {
             input.Normalize();
         }
+
+        isMoving = input.sqrMagnitude > Mathf.Epsilon;
 
         Vector3 desiredPosition = heartObject.position + input * heartMoveSpeed * heartSmoothTime;
         Vector3 position = Vector3.SmoothDamp(
