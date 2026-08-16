@@ -283,6 +283,7 @@ MonoBehaviour:
   maxBlockIntercept: 0.7
   minBlockCentered: 0.3
   maxBlockCentered: 0.7
+  maxBlockAngleVariance: 20
   blockCreateTime: 0.5
   blockEaseType: 9
   minBlockLength: 8
@@ -1576,7 +1577,7 @@ Transform:
   m_GameObject: {fileID: 887984959}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10, y: -5, z: 0}
+  m_LocalPosition: {x: 0, y: -5, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1878,7 +1879,7 @@ Transform:
   m_GameObject: {fileID: 1006528173}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10, y: 5, z: 0}
+  m_LocalPosition: {x: 0, y: 5, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
