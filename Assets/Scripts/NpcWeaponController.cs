@@ -26,6 +26,9 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private float maxSlashLength = 16f;
     [SerializeField] private float slashTrackingCheckFrequency = 0.5f;
     [SerializeField] private float slashTrackingSmoothTime = 0.3f;
+    [SerializeField] private float minAimLeadTime = 0.1f;
+    [SerializeField] private float maxAimLeadTime = 0.4f;
+    [SerializeField] private float heartVelocitySmoothTime = 0.2f;
     
     [Header("Block")]
     [SerializeField] private float minBlockReactionTime = 0.2f;
@@ -53,6 +56,8 @@ public class NpcWeaponController : MonoBehaviour
     private Vector3 trackedAimPoint;
     private Vector3 aimVelocity;
     private float nextTrackingCheckTime;
+    private Vector3 previousHeartPosition;
+    private Vector3 estimatedHeartVelocity;
 
     private enum DefenseState
     {
@@ -72,6 +77,10 @@ public class NpcWeaponController : MonoBehaviour
     private void Awake()
     {
         weaponController = GetComponent<WeaponController>();
+        if (playerHeart != null)
+        {
+            previousHeartPosition = playerHeart.position;
+        }
     }
 
     private void OnEnable()
@@ -89,6 +98,8 @@ public class NpcWeaponController : MonoBehaviour
 
     private void Update()
     {
+        UpdateHeartVelocity();
+
         if (UpdateDefense())
         {
             return;
@@ -122,7 +133,9 @@ public class NpcWeaponController : MonoBehaviour
         }
 
         Vector3 center = playCenter != null ? playCenter.position : transform.position;
-        aimPoint = ClampToBounds(playerHeart != null ? playerHeart.position : center, center);
+        aimPoint = playerHeart != null
+            ? ClampToBounds(playerHeart.position + estimatedHeartVelocity * Random.Range(minAimLeadTime, maxAimLeadTime), center)
+            : center;
         trackedAimPoint = aimPoint;
         aimVelocity = Vector3.zero;
         nextTrackingCheckTime = Time.time + Random.Range(0f, slashTrackingCheckFrequency);
@@ -151,7 +164,8 @@ public class NpcWeaponController : MonoBehaviour
 
         if (Time.time >= nextTrackingCheckTime)
         {
-            trackedAimPoint = ClampToBounds(playerHeart.position, center);
+            Vector3 lead = estimatedHeartVelocity * Random.Range(minAimLeadTime, maxAimLeadTime);
+            trackedAimPoint = ClampToBounds(playerHeart.position + lead, center);
             nextTrackingCheckTime = Time.time + Random.Range(0f, slashTrackingCheckFrequency);
         }
 
@@ -170,6 +184,21 @@ public class NpcWeaponController : MonoBehaviour
     private void ScheduleNextSlash()
     {
         nextSlashTime = Time.time + Random.Range(minSlashInterval, maxSlashInterval);
+    }
+
+    private void UpdateHeartVelocity()
+    {
+        if (playerHeart == null || Time.deltaTime <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        Vector3 frameVelocity = (playerHeart.position - previousHeartPosition) / Time.deltaTime;
+        previousHeartPosition = playerHeart.position;
+        estimatedHeartVelocity = Vector3.Lerp(
+            estimatedHeartVelocity,
+            frameVelocity,
+            heartVelocitySmoothTime > Mathf.Epsilon ? Mathf.Clamp01(Time.deltaTime / heartVelocitySmoothTime) : 1f);
     }
 
     // Returns true while the NPC is committed to defending, which suspends its attack routine.
