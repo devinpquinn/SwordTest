@@ -29,6 +29,14 @@ public class WeaponController : MonoBehaviour
     [Header("Hit")]
     [SerializeField] private LayerMask heartLayers;
 
+    [Header("Heart Movement")]
+    [SerializeField] private Transform heartObject;
+    [SerializeField] private Transform heartBoundsCenter;
+    [SerializeField] private float heartMaxDistanceX = 5f;
+    [SerializeField] private float heartMaxDistanceY = 3f;
+    [SerializeField] private float heartMoveSpeed = 6f;
+    [SerializeField] private float heartSmoothTime = 0.1f;
+
     [Header("Block Object")]
     [SerializeField] private Transform blockObject;
     [SerializeField] private LineRenderer blockLineRenderer;
@@ -61,6 +69,7 @@ public class WeaponController : MonoBehaviour
     private float slashTravelDistance;
     private bool hasHitHeartThisSlash;
     private bool isMovingBackward;
+    private Vector3 heartVelocity;
     private Tween slashTween;
     private readonly RaycastHit[] sweepHits = new RaycastHit[8];
 
@@ -127,6 +136,7 @@ public class WeaponController : MonoBehaviour
         if (isPlayer)
         {
             UpdateMouseInput();
+            UpdateHeartMovement();
         }
 
         if (weaponObject != null && !IsBusy)
@@ -178,6 +188,34 @@ public class WeaponController : MonoBehaviour
         }
 
         staminaBar.fillAmount = maxStamina > Mathf.Epsilon ? currentStamina / maxStamina : 0f;
+    }
+
+    private void UpdateHeartMovement()
+    {
+        if (heartObject == null)
+        {
+            return;
+        }
+
+        Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0f);
+        if (input.sqrMagnitude > 1f)
+        {
+            input.Normalize();
+        }
+
+        Vector3 desiredPosition = heartObject.position + input * heartMoveSpeed * heartSmoothTime;
+        Vector3 position = Vector3.SmoothDamp(
+            heartObject.position,
+            desiredPosition,
+            ref heartVelocity,
+            heartSmoothTime,
+            heartMoveSpeed);
+
+        Vector3 center = heartBoundsCenter != null ? heartBoundsCenter.position : transform.position;
+        heartObject.position = new Vector3(
+            Mathf.Clamp(position.x, center.x - heartMaxDistanceX, center.x + heartMaxDistanceX),
+            Mathf.Clamp(position.y, center.y - heartMaxDistanceY, center.y + heartMaxDistanceY),
+            heartObject.position.z);
     }
 
     private void UpdateBlockLine()
