@@ -279,6 +279,9 @@ MonoBehaviour:
   maxSlashLength: 16
   slashTrackingCheckFrequency: 0.1
   slashTrackingSmoothTime: 0.1
+  minAimLeadTime: 0.1
+  maxAimLeadTime: 0.5
+  heartVelocitySmoothTime: 0.2
   minBlockReactionTime: 0.2
   maxBlockReactionTime: 0.5
   minBlockIntercept: 0.3
