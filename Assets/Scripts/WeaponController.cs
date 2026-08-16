@@ -54,6 +54,8 @@ public class WeaponController : MonoBehaviour
     private Vector3 slashDirection;
     private Vector3 previousWeaponPosition;
     private float slashSpeed;
+    private float maxSlashSpeed;
+    private float slashTravelDistance;
     private Tween slashTween;
     private readonly RaycastHit[] sweepHits = new RaycastHit[8];
 
@@ -364,6 +366,8 @@ public class WeaponController : MonoBehaviour
         slashDirection = (weaponTarget.position - weaponObject.position).normalized;
         previousWeaponPosition = weaponObject.position;
         slashSpeed = 0f;
+        maxSlashSpeed = 0f;
+        slashTravelDistance = 0f;
         slashTween?.Kill();
         slashTween = weaponObject
             .DOMove(weaponTarget.position, slashDuration * StaminaDurationMultiplier)
@@ -374,8 +378,14 @@ public class WeaponController : MonoBehaviour
                 weaponObject.position = weaponTarget.position;
                 weaponObject.gameObject.SetActive(false);
                 slashTween = null;
+                LogSlashStats();
                 SlashFinished?.Invoke();
             });
+    }
+
+    private void LogSlashStats()
+    {
+        // Debug.Log($"{name} slash length: {slashTravelDistance:F2} units, max speed: {maxSlashSpeed:F2} units/sec");
     }
 
     private void UpdateBlockObject(Vector3 pointerPosition)
@@ -470,6 +480,8 @@ public class WeaponController : MonoBehaviour
         }
 
         slashSpeed = Time.deltaTime > Mathf.Epsilon ? distance / Time.deltaTime : 0f;
+        maxSlashSpeed = Mathf.Max(maxSlashSpeed, slashSpeed);
+        slashTravelDistance += distance;
 
         int hitCount = Physics.SphereCastNonAlloc(
             startPosition,
@@ -501,6 +513,7 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
+        slashTravelDistance -= distance - closestDistance;
         weaponObject.position = startPosition + delta.normalized * closestDistance;
         previousWeaponPosition = weaponObject.position;
         NotifyBlocked(sweepHits[closestIndex].collider.gameObject);
@@ -527,8 +540,7 @@ public class WeaponController : MonoBehaviour
         slashTween?.Kill();
         slashTween = null;
         isExecutingSlash = false;
-        
-        // Debug.Log("Weapon speed: " + slashSpeed + " units/sec");
+        LogSlashStats();
 
         Vector3 bounceDirection = slashDirection.sqrMagnitude > Mathf.Epsilon ? -slashDirection : Vector3.zero;
         float speedWeight = Mathf.InverseLerp(minBounceBackSpeed, maxBounceBackSpeed, slashSpeed);
