@@ -199,14 +199,36 @@ public class WeaponController : MonoBehaviour
         staminaBar.fillAmount = maxStamina > Mathf.Epsilon ? currentStamina / maxStamina : 0f;
     }
 
+    // Heart position inside its bounds, mapped per axis to -1 (min edge) .. 1 (max edge).
+    public Vector2 NormalizedHeartOffset
+    {
+        get
+        {
+            if (heartObject == null)
+            {
+                return Vector2.zero;
+            }
+
+            Vector3 center = heartBoundsCenter != null ? heartBoundsCenter.position : transform.position;
+            return new Vector2(
+                heartMaxDistanceX > Mathf.Epsilon ? Mathf.Clamp((heartObject.position.x - center.x) / heartMaxDistanceX, -1f, 1f) : 0f,
+                heartMaxDistanceY > Mathf.Epsilon ? Mathf.Clamp((heartObject.position.y - center.y) / heartMaxDistanceY, -1f, 1f) : 0f);
+        }
+    }
+
     private void UpdateHeartMovement()
+    {
+        MoveHeart(new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0f));
+    }
+
+    public void MoveHeart(Vector3 input)
     {
         if (heartObject == null)
         {
             return;
         }
 
-        Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0f);
+        input.z = 0f;
         if (input.sqrMagnitude > 1f)
         {
             input.Normalize();

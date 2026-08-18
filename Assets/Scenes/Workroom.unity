@@ -271,7 +271,10 @@ MonoBehaviour:
   npcHeart: {fileID: 1006528177}
   playerWeapon: {fileID: 1611238761}
   minSlashInterval: 1
-  maxSlashInterval: 3
+  maxSlashInterval: 5
+  minMoveCheckInterval: 0.1
+  maxMoveCheckInterval: 1
+  stayStillChance: 0.5
   windupTime: 0.5
   windupHoldTime: 0.3
   windupEaseType: 9

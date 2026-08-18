@@ -18,6 +18,11 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private float minSlashInterval = 2f;
     [SerializeField] private float maxSlashInterval = 4f;
 
+    [Header("Movement")]
+    [SerializeField] private float minMoveCheckInterval = 0.4f;
+    [SerializeField] private float maxMoveCheckInterval = 1.2f;
+    [SerializeField, Range(0f, 1f)] private float stayStillChance = 0.25f;
+
     [Header("Slash")]
     [SerializeField] private float windupTime = 0.6f;
     [SerializeField] private float windupHoldTime = 0.2f;
@@ -58,6 +63,22 @@ public class NpcWeaponController : MonoBehaviour
     private float nextTrackingCheckTime;
     private Vector3 previousHeartPosition;
     private Vector3 estimatedHeartVelocity;
+    private Vector3 moveDirection;
+    private float nextMoveCheckTime;
+
+    private static readonly Vector3[] MoveDirections =
+    {
+        new Vector3(1f, 0f, 0f),
+        new Vector3(-1f, 0f, 0f),
+        new Vector3(0f, 1f, 0f),
+        new Vector3(0f, -1f, 0f),
+        new Vector3(1f, 1f, 0f).normalized,
+        new Vector3(1f, -1f, 0f).normalized,
+        new Vector3(-1f, 1f, 0f).normalized,
+        new Vector3(-1f, -1f, 0f).normalized
+    };
+
+    private readonly float[] moveWeights = new float[MoveDirections.Length];
 
     private enum DefenseState
     {
@@ -99,6 +120,7 @@ public class NpcWeaponController : MonoBehaviour
     private void Update()
     {
         UpdateHeartVelocity();
+        UpdateMovement();
 
         if (UpdateDefense())
         {
@@ -184,6 +206,61 @@ public class NpcWeaponController : MonoBehaviour
     private void ScheduleNextSlash()
     {
         nextSlashTime = Time.time + Random.Range(minSlashInterval, maxSlashInterval);
+    }
+
+    private void UpdateMovement()
+    {
+        if (Time.time >= nextMoveCheckTime)
+        {
+            moveDirection = PickMoveDirection();
+            nextMoveCheckTime = Time.time + Random.Range(minMoveCheckInterval, maxMoveCheckInterval);
+        }
+
+        weaponController.MoveHeart(moveDirection);
+    }
+
+    private Vector3 PickMoveDirection()
+    {
+        if (Random.value < stayStillChance)
+        {
+            return Vector3.zero;
+        }
+
+        Vector2 offset = weaponController.NormalizedHeartOffset;
+        float total = 0f;
+        for (int i = 0; i < MoveDirections.Length; i++)
+        {
+            moveWeights[i] = AxisWeight(MoveDirections[i].x, offset.x) * AxisWeight(MoveDirections[i].y, offset.y);
+            total += moveWeights[i];
+        }
+
+        if (total <= Mathf.Epsilon)
+        {
+            return Vector3.zero;
+        }
+
+        float roll = Random.value * total;
+        for (int i = 0; i < MoveDirections.Length; i++)
+        {
+            roll -= moveWeights[i];
+            if (roll <= 0f)
+            {
+                return MoveDirections[i];
+            }
+        }
+
+        return MoveDirections[MoveDirections.Length - 1];
+    }
+
+    // Moving toward an edge gets less likely the closer the heart already is to it.
+    private static float AxisWeight(float direction, float offset)
+    {
+        if (Mathf.Abs(direction) <= Mathf.Epsilon)
+        {
+            return 0.5f;
+        }
+
+        return Mathf.Clamp01((1f - offset * Mathf.Sign(direction)) * 0.5f);
     }
 
     private void UpdateHeartVelocity()
