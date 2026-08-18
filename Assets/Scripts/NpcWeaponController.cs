@@ -44,7 +44,8 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private float maxBlockCentered = 0.6f;
     [SerializeField] private float maxBlockAngleVariance = 20f;
     [SerializeField] private float blockCreateTime = 0.5f;
-    [SerializeField] private float blockTrackingCheckFrequency = 0.3f;
+    [SerializeField] private float minBlockTrackingCheckInterval = 0.1f;
+    [SerializeField] private float maxBlockTrackingCheckInterval = 0.3f;
     [SerializeField] private float blockTrackingSmoothTime = 0.2f;
     [SerializeField] private Ease blockEaseType = Ease.OutCubic;
     [SerializeField] private float minBlockLength = 6f;
@@ -334,7 +335,7 @@ public class NpcWeaponController : MonoBehaviour
                 if (Time.time >= nextBlockTrackingCheckTime)
                 {
                     trackedBlockEndPoint = TrackedBlockEndPoint();
-                    nextBlockTrackingCheckTime = Time.time + Random.Range(0f, blockTrackingCheckFrequency);
+                    nextBlockTrackingCheckTime = Time.time + Random.Range(minBlockTrackingCheckInterval, maxBlockTrackingCheckInterval);
                 }
 
                 blockEndPoint = Vector3.SmoothDamp(blockEndPoint, trackedBlockEndPoint, ref blockEndVelocity, blockTrackingSmoothTime);
@@ -415,7 +416,7 @@ public class NpcWeaponController : MonoBehaviour
 
         weaponController.BeginBlock(blockStartPoint);
         blockCreateStartTime = Time.time;
-        nextBlockTrackingCheckTime = Time.time + Random.Range(0f, blockTrackingCheckFrequency);
+        nextBlockTrackingCheckTime = Time.time + Random.Range(minBlockTrackingCheckInterval, maxBlockTrackingCheckInterval);
         defenseState = DefenseState.Creating;
     }
 
