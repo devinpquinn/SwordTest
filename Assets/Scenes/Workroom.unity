@@ -293,6 +293,8 @@ MonoBehaviour:
   maxBlockCentered: 0.7
   maxBlockAngleVariance: 20
   blockCreateTime: 0.5
+  blockTrackingCheckFrequency: 0.2
+  blockTrackingSmoothTime: 0.1
   blockEaseType: 9
   minBlockLength: 8
   maxBlockLength: 16

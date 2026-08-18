@@ -44,6 +44,8 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private float maxBlockCentered = 0.6f;
     [SerializeField] private float maxBlockAngleVariance = 20f;
     [SerializeField] private float blockCreateTime = 0.5f;
+    [SerializeField] private float blockTrackingCheckFrequency = 0.3f;
+    [SerializeField] private float blockTrackingSmoothTime = 0.2f;
     [SerializeField] private Ease blockEaseType = Ease.OutCubic;
     [SerializeField] private float minBlockLength = 6f;
     [SerializeField] private float maxBlockLength = 12f;
@@ -94,6 +96,12 @@ public class NpcWeaponController : MonoBehaviour
     private float blockCreateStartTime;
     private Vector3 blockStartPoint;
     private Vector3 blockEndPoint;
+    private Vector3 trackedBlockEndPoint;
+    private Vector3 blockEndVelocity;
+    private Vector3 blockAttackOrigin;
+    private float blockInterceptT;
+    private float blockInterceptFraction;
+    private float nextBlockTrackingCheckTime;
 
     private void Awake()
     {
@@ -323,6 +331,14 @@ public class NpcWeaponController : MonoBehaviour
                     return false;
                 }
 
+                if (Time.time >= nextBlockTrackingCheckTime)
+                {
+                    trackedBlockEndPoint = TrackedBlockEndPoint();
+                    nextBlockTrackingCheckTime = Time.time + Random.Range(0f, blockTrackingCheckFrequency);
+                }
+
+                blockEndPoint = Vector3.SmoothDamp(blockEndPoint, trackedBlockEndPoint, ref blockEndVelocity, blockTrackingSmoothTime);
+
                 if (defenseState == DefenseState.Creating)
                 {
                     float progress = blockCreateTime > Mathf.Epsilon
@@ -338,6 +354,10 @@ public class NpcWeaponController : MonoBehaviour
                     {
                         defenseState = DefenseState.Holding;
                     }
+                }
+                else
+                {
+                    weaponController.UpdateBlockDrag(blockEndPoint);
                 }
 
                 if (playerAttackOver)
@@ -374,9 +394,9 @@ public class NpcWeaponController : MonoBehaviour
         perpendicular = Quaternion.Euler(0f, 0f, Random.Range(-maxBlockAngleVariance, maxBlockAngleVariance)) * perpendicular;
 
         Vector3 center = playCenter != null ? playCenter.position : transform.position;
-        Vector3 interceptPoint = ClampToBounds(
-            Vector3.LerpUnclamped(origin, target, Random.Range(minBlockIntercept, maxBlockIntercept)),
-            center);
+        blockAttackOrigin = origin;
+        blockInterceptT = Random.Range(minBlockIntercept, maxBlockIntercept);
+        Vector3 interceptPoint = InterceptPoint(center);
         float length = Random.Range(minBlockLength, maxBlockLength);
         // Fraction of the block that sits on the start side of the intercept point; 0.5 centers it.
         float centeredFraction = Random.Range(minBlockCentered, maxBlockCentered);
@@ -386,9 +406,43 @@ public class NpcWeaponController : MonoBehaviour
         blockStartPoint = interceptPoint + perpendicular * Mathf.Min(startReach, MaxReach(interceptPoint, perpendicular, center));
         blockEndPoint = interceptPoint - perpendicular * Mathf.Min(endReach, MaxReach(interceptPoint, -perpendicular, center));
 
+        float startToEnd = (blockEndPoint - blockStartPoint).magnitude;
+        blockInterceptFraction = startToEnd > Mathf.Epsilon
+            ? (interceptPoint - blockStartPoint).magnitude / startToEnd
+            : 0.5f;
+        trackedBlockEndPoint = blockEndPoint;
+        blockEndVelocity = Vector3.zero;
+
         weaponController.BeginBlock(blockStartPoint);
         blockCreateStartTime = Time.time;
+        nextBlockTrackingCheckTime = Time.time + Random.Range(0f, blockTrackingCheckFrequency);
         defenseState = DefenseState.Creating;
+    }
+
+    // Where the incoming attack line (slash origin to heart) should cross the block; the heart moving swings this line.
+    private Vector3 InterceptPoint(Vector3 center)
+    {
+        Vector3 target = npcHeart != null ? npcHeart.position : transform.position;
+        return ClampToBounds(Vector3.LerpUnclamped(blockAttackOrigin, target, blockInterceptT), center);
+    }
+
+    // The block pivots on its start point, so holding the crossing point means stretching and swinging the free end.
+    private Vector3 TrackedBlockEndPoint()
+    {
+        if (blockInterceptFraction <= Mathf.Epsilon)
+        {
+            return blockEndPoint;
+        }
+
+        Vector3 center = playCenter != null ? playCenter.position : transform.position;
+        Vector3 delta = (InterceptPoint(center) - blockStartPoint) / blockInterceptFraction;
+        if (delta.sqrMagnitude <= Mathf.Epsilon)
+        {
+            return blockEndPoint;
+        }
+
+        Vector3 direction = delta.normalized;
+        return blockStartPoint + direction * Mathf.Min(delta.magnitude, MaxReach(blockStartPoint, direction, center));
     }
 
     private void EndDefense()
