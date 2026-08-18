@@ -337,9 +337,9 @@ MonoBehaviour:
   heartBoundsCenter: {fileID: 1795179259}
   heartMaxDistanceX: 18
   heartMaxDistanceY: 9
-  heartMoveSpeed: 10
+  heartMoveSpeed: 12
   minHeartMoveSpeedMult: 0.3
-  heartSmoothTime: 0.1
+  heartSmoothTime: 1
   blockObject: {fileID: 477005003}
   blockLineRenderer: {fileID: 477005004}
   blockObjectThickness: 1
@@ -2520,9 +2520,9 @@ MonoBehaviour:
   heartBoundsCenter: {fileID: 1795179259}
   heartMaxDistanceX: 18
   heartMaxDistanceY: 9
-  heartMoveSpeed: 10
+  heartMoveSpeed: 12
   minHeartMoveSpeedMult: 0.3
-  heartSmoothTime: 0.1
+  heartSmoothTime: 1
   blockObject: {fileID: 1473459154}
   blockLineRenderer: {fileID: 1473459155}
   blockObjectThickness: 1
