@@ -291,7 +291,7 @@ MonoBehaviour:
   maxBlockIntercept: 0.7
   minBlockCentered: 0.3
   maxBlockCentered: 0.7
-  maxBlockAngleVariance: 20
+  maxBlockAngleVariance: 15
   blockCreateTime: 0.5
   minBlockTrackingCheckInterval: 0.1
   maxBlockTrackingCheckInterval: 0.3
