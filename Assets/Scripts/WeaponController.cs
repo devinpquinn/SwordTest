@@ -4,6 +4,8 @@ using DG.Tweening;
 
 public class WeaponController : MonoBehaviour
 {
+    private const float DefaultBlockedStaminaSplit = 0.5f;
+
     [Header("Movement")]
     [SerializeField] private bool isPlayer = true;
     [SerializeField] private Transform weaponTarget;
@@ -76,6 +78,8 @@ public class WeaponController : MonoBehaviour
     private Vector3 heartVelocity;
     private Tween slashTween;
     private readonly RaycastHit[] sweepHits = new RaycastHit[8];
+    private float pendingSlashStaminaCost;
+    private bool hasResolvedSlashStamina;
 
     private void Awake()
     {
@@ -335,6 +339,8 @@ public class WeaponController : MonoBehaviour
 
     public Vector3 SlashStartPosition => slashStartPosition;
 
+    public Vector3 BlockStartPosition => blockStartPosition;
+
     public event System.Action SlashFinished;
 
     public void MoveTargetTowards(Vector3 position)
@@ -397,8 +403,8 @@ public class WeaponController : MonoBehaviour
             return;
         }
 
-        currentStamina = Mathf.Max(currentStamina - slashStaminaCost, 0f);
-        UpdateStaminaBar();
+        pendingSlashStaminaCost = slashStaminaCost;
+        hasResolvedSlashStamina = false;
 
         isChargingSlash = false;
         weaponTarget.position = endPosition;
@@ -453,6 +459,7 @@ public class WeaponController : MonoBehaviour
             .SetEase(slashEaseType)
             .OnComplete(() =>
             {
+                ResolveSlashStaminaToSelf();
                 isExecutingSlash = false;
                 weaponObject.position = weaponTarget.position;
                 weaponObject.gameObject.SetActive(false);
@@ -612,7 +619,7 @@ public class WeaponController : MonoBehaviour
 
         weaponObject.position = startPosition + delta.normalized * closestDistance;
         previousWeaponPosition = weaponObject.position;
-        NotifyBlocked(blocker);
+        NotifyBlocked(blocker, sweepHits[closestIndex].point);
     }
 
     private void BreakBlock(GameObject blocker)
@@ -676,6 +683,7 @@ public class WeaponController : MonoBehaviour
             slashTravelDistance -= distance - closestDistance;
             weaponObject.position = startPosition + direction * closestDistance;
             previousWeaponPosition = weaponObject.position;
+            ResolveSlashStaminaToSelf();
             BounceBack();
             return true;
         }
@@ -685,7 +693,7 @@ public class WeaponController : MonoBehaviour
         return false;
     }
 
-    internal void NotifyBlocked(GameObject blocker)
+    internal void NotifyBlocked(GameObject blocker, Vector3 collisionPoint, bool hasCollisionPoint = true)
     {
         if (!isExecutingSlash || isBouncingBack || weaponObject == null)
         {
@@ -704,12 +712,68 @@ public class WeaponController : MonoBehaviour
         }
 
         WeaponController blockerOwner = blocker.GetComponentInParent<BlockOwnerRelay>()?.Owner;
+        ResolveBlockedSlashStamina(blockerOwner, hasCollisionPoint ? collisionPoint : weaponObject.position);
         if (blockerOwner != null)
         {
             blockerOwner.EndBlock();
         }
 
         BounceBack();
+    }
+
+    private void ResolveSlashStaminaToSelf()
+    {
+        if (hasResolvedSlashStamina)
+        {
+            return;
+        }
+
+        SpendStamina(pendingSlashStaminaCost);
+        hasResolvedSlashStamina = true;
+        pendingSlashStaminaCost = 0f;
+    }
+
+    private void ResolveBlockedSlashStamina(WeaponController blockerOwner, Vector3 collisionPoint)
+    {
+        if (hasResolvedSlashStamina)
+        {
+            return;
+        }
+
+        if (blockerOwner == null)
+        {
+            float splitCost = pendingSlashStaminaCost * DefaultBlockedStaminaSplit;
+            SpendStamina(splitCost);
+            hasResolvedSlashStamina = true;
+            pendingSlashStaminaCost = 0f;
+            return;
+        }
+
+        float attackDistance = Vector3.Distance(collisionPoint, slashStartPosition);
+        float blockDistance = Vector3.Distance(collisionPoint, blockerOwner.BlockStartPosition);
+        float fartherDistance = Mathf.Max(attackDistance, blockDistance);
+        float attackerShare = fartherDistance > Mathf.Epsilon
+            ? Mathf.Clamp01(0.5f + (blockDistance - attackDistance) / (2f * fartherDistance))
+            : DefaultBlockedStaminaSplit;
+        float attackerCost = pendingSlashStaminaCost * attackerShare;
+        float defenderCost = pendingSlashStaminaCost - attackerCost;
+
+        SpendStamina(attackerCost);
+        blockerOwner.SpendStamina(defenderCost);
+
+        hasResolvedSlashStamina = true;
+        pendingSlashStaminaCost = 0f;
+    }
+
+    private void SpendStamina(float amount)
+    {
+        if (amount <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        currentStamina = Mathf.Max(currentStamina - amount, 0f);
+        UpdateStaminaBar();
     }
 
     private void BounceBack()
@@ -750,6 +814,8 @@ public class WeaponController : MonoBehaviour
         isExecutingSlash = false;
         isBouncingBack = false;
         isBlocking = false;
+        pendingSlashStaminaCost = 0f;
+        hasResolvedSlashStamina = false;
         if (weaponObject != null)
         {
             weaponObject.gameObject.SetActive(false);
@@ -769,21 +835,21 @@ public class WeaponController : MonoBehaviour
 
 public class WeaponBlockRelay : MonoBehaviour
 {
-    private System.Action<GameObject> onBlocked;
+    private System.Action<GameObject, Vector3, bool> onBlocked;
 
-    internal void Initialize(System.Action<GameObject> blockedCallback)
+    internal void Initialize(System.Action<GameObject, Vector3, bool> blockedCallback)
     {
         onBlocked = blockedCallback;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        onBlocked?.Invoke(other.gameObject);
+        onBlocked?.Invoke(other.gameObject, transform.position, false);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        onBlocked?.Invoke(other.gameObject);
+        onBlocked?.Invoke(other.gameObject, transform.position, false);
     }
 }
 
