@@ -274,8 +274,8 @@ MonoBehaviour:
   maxSlashInterval: 5
   minMoveCheckInterval: 0.1
   maxMoveCheckInterval: 1
-  stayStillChance: 0.3
-  stayStillChanceTargeted: 0.1
+  stayStillChance: 0.5
+  stayStillChanceTargeted: 0.2
   windupTime: 0.5
   windupHoldTime: 0.3
   windupEaseType: 9
@@ -338,7 +338,7 @@ MonoBehaviour:
   heartBoundsCenter: {fileID: 1795179259}
   heartMaxDistanceX: 10.5
   heartMaxDistanceY: 10.5
-  heartMoveSpeed: 12
+  heartMoveSpeed: 6
   minHeartMoveSpeedMult: 0.3
   heartSmoothTime: 1
   blockObject: {fileID: 477005003}
@@ -2521,7 +2521,7 @@ MonoBehaviour:
   heartBoundsCenter: {fileID: 1795179259}
   heartMaxDistanceX: 10.5
   heartMaxDistanceY: 10.5
-  heartMoveSpeed: 12
+  heartMoveSpeed: 6
   minHeartMoveSpeedMult: 0.3
   heartSmoothTime: 1
   blockObject: {fileID: 1473459154}
