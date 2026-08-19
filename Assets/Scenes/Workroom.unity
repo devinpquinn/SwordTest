@@ -265,7 +265,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcWeaponController
   playCenter: {fileID: 1795179259}
-  maxDistanceX: 20
+  maxDistanceX: 10
   maxDistanceY: 10
   playerHeart: {fileID: 887984960}
   npcHeart: {fileID: 1006528177}
@@ -336,7 +336,7 @@ MonoBehaviour:
   minHeartHitSpeed: 100
   heartObject: {fileID: 1006528177}
   heartBoundsCenter: {fileID: 1795179259}
-  heartMaxDistanceX: 18
+  heartMaxDistanceX: 8.5
   heartMaxDistanceY: 9
   heartMoveSpeed: 12
   minHeartMoveSpeedMult: 0.3
@@ -2519,7 +2519,7 @@ MonoBehaviour:
   minHeartHitSpeed: 100
   heartObject: {fileID: 887984960}
   heartBoundsCenter: {fileID: 1795179259}
-  heartMaxDistanceX: 18
+  heartMaxDistanceX: 8.5
   heartMaxDistanceY: 9
   heartMoveSpeed: 12
   minHeartMoveSpeedMult: 0.3
