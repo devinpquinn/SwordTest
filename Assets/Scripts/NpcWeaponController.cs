@@ -22,6 +22,7 @@ public class NpcWeaponController : MonoBehaviour
     [SerializeField] private float minMoveCheckInterval = 0.4f;
     [SerializeField] private float maxMoveCheckInterval = 1.2f;
     [SerializeField, Range(0f, 1f)] private float stayStillChance = 0.25f;
+    [SerializeField, Range(0f, 1f)] private float stayStillChanceTargeted = 0.5f;
 
     [Header("Slash")]
     [SerializeField] private float windupTime = 0.6f;
@@ -230,7 +231,8 @@ public class NpcWeaponController : MonoBehaviour
 
     private Vector3 PickMoveDirection()
     {
-        if (Random.value < stayStillChance)
+        bool isTargeted = playerWeapon != null && playerWeapon.IsChargingSlash;
+        if (Random.value < (isTargeted ? stayStillChanceTargeted : stayStillChance))
         {
             return Vector3.zero;
         }

@@ -274,7 +274,8 @@ MonoBehaviour:
   maxSlashInterval: 5
   minMoveCheckInterval: 0.1
   maxMoveCheckInterval: 1
-  stayStillChance: 0.5
+  stayStillChance: 0.3
+  stayStillChanceTargeted: 0.1
   windupTime: 0.5
   windupHoldTime: 0.3
   windupEaseType: 9
